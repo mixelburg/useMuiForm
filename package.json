@@ -1,0 +1,23 @@
+{
+  "name": "usemuiform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+
+  "author": "mixelburg",
+  "license": "ISC",
+  "dependencies": {
+    "jotai": "^1.12.1",
+    "jotai-location": "^0.3.2",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}
