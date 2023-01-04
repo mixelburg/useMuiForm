@@ -33,11 +33,11 @@ const checkValid = (errors: IErrorState) => {
 }
 
 
-const useMuiForm = (urlKey: string) => {
-    const defaultState: IState = {}
+const useMuiForm = <T extends IState = IState>(urlKey: string) => {
+    const defaultState: T = {} as T
     const stateOptions: IStateOptions = {}
 
-    const memoFunc = () => atomWithHash<IState>(urlKey, defaultState, { replaceState: true })
+    const memoFunc = () => atomWithHash<T>(urlKey, defaultState, { replaceState: true })
     // get return value type
     type MemoReturnType = ReturnType<typeof memoFunc>
     const stateAtom: MemoReturnType = useMemo(memoFunc, [])
@@ -95,6 +95,7 @@ const useMuiForm = (urlKey: string) => {
     }, [state])
 
     const register = (name: string, options: IOptions = { type: InputType.TEXT }) => {
+        // @ts-ignore
         defaultState[name] = options.type === InputType.CHECKBOX ? definedOr(options.default, false) : definedOr(options.default, '')
 
         stateOptions[name] = {
