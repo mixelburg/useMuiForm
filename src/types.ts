@@ -1,52 +1,56 @@
-export enum InputType {
-    CHECKBOX = 'checkbox',
-    TEXT = 'text',
-}
+import React from "react";
 
-export type ValidateFunc = (value: any, state: any) => string | true
-export type FormatFunc = (value: string) => string | undefined
+export type ValidateFunc<V, S> = (value: V, state: S) => string | true
+export type FormatFunc<V> = (value: V) => V | undefined
 
 
-export type IOptions = IOptionsInput | IOptionsCheckbox
-
-export interface IBaseOptions<T> {
+export interface IOptions<V, S> {
     disabled?: boolean;
-    validate?: ValidateFunc;
+    validate?: ValidateFunc<V, S>;
     helperText?: string;
 
-    type?: InputType
-    default?: T
-}
-
-export interface IOptionsInput extends IBaseOptions<string> {
     required?: boolean;
-    format?: FormatFunc;
-    type?: InputType.TEXT;
+    format?: FormatFunc<V>;
 }
 
-export interface IOptionsCheckbox extends IBaseOptions<boolean> {
-    type: InputType.CHECKBOX;
-}
 
-export interface ISettings {
+export interface ISettings<V, S> {
     required: boolean;
-    validate?: ValidateFunc;
-    format?: FormatFunc;
+    validate?: ValidateFunc<V, S>;
+    format?: FormatFunc<V>;
     disabled?: boolean;
 }
 
-export interface IStateOptions {
-    [key: string]: ISettings;
+export type IStateOptions<S> = {
+    [key in keyof S]?: ISettings<S[key], S>;
 }
 
 export interface IState {
-    [key: string]: string | boolean;
+    [key: string]: any;
 }
 
-export interface IErrorState {
-    [key: string]: undefined | string;
+export type IErrorState<S> = {
+    [key in keyof S]: undefined | string;
 }
 
-export interface ITouchedState {
-    [key: string]: boolean;
+export type ITouchedState<S> = {
+    [key in keyof S]: boolean;
 }
+
+export type Register<V, S> = V extends boolean ? BooleanRegister<S> : GenericRegister<V, S>
+
+export interface BaseRegister<S> {
+    name: keyof S;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    error: boolean;
+    disabled: boolean;
+    helperText: string;
+}
+
+export interface BooleanRegister<S> extends BaseRegister<S> {
+    checked: boolean;
+}
+export interface GenericRegister<V, S> extends BaseRegister<S> {
+    value: V;
+}
+

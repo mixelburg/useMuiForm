@@ -1,29 +1,29 @@
-import React, { ChangeEvent, useEffect, useMemo, useState, HTMLInputElement } from 'react'
-import {useAtom, WritableAtom} from 'jotai'
-import { RESET } from 'jotai/utils'
-import { atomWithHash } from 'jotai-location'
-import {IErrorState, InputType, IOptions, IState, IStateOptions, ITouchedState} from "./types";
+import {ChangeEvent, useEffect, useMemo, useState} from 'react'
+import {useAtom} from 'jotai'
+import {RESET} from 'jotai/utils'
+import {atomWithHash} from 'jotai-location'
+import {IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register} from "./types";
 
 
 const definedOr = <T, V>(value: T, other: V) => value === undefined ? other : value
 
-const generateErrorState = (defaultState: IState): IErrorState => {
-    const errorState: IErrorState = {}
+const generateErrorState = <S>(defaultState: S): IErrorState<S> => {
+    const errorState: Partial<IErrorState<S>> = {}
     for (const key in defaultState) {
         errorState[key] = undefined
     }
-    return errorState
+    return errorState as IErrorState<S>
 }
 
-const generateTouchedState = (defaultState: IState, flag: boolean = false): ITouchedState => {
-    const touchedState: ITouchedState = {}
+const generateTouchedState = <S>(defaultState: S, flag: boolean = false): ITouchedState<S> => {
+    const touchedState: Partial<ITouchedState<S>> = {}
     for (const key in defaultState) {
         touchedState[key] = flag
     }
-    return touchedState
+    return touchedState as ITouchedState<S>
 }
 
-const checkValid = (errors: IErrorState) => {
+const checkValid = <S>(errors: IErrorState<S>): boolean => {
     for (const key in errors) {
         if (errors[key] !== undefined) {
             return false
@@ -33,11 +33,11 @@ const checkValid = (errors: IErrorState) => {
 }
 
 
-const useMuiForm = <T extends IState = IState>(urlKey: string) => {
-    const defaultState: T = {} as T
-    const stateOptions: IStateOptions = {}
+const useMuiForm = <S extends IState = IState>(urlKey: string) => {
+    const defaultState: S = {} as S
+    const stateOptions: IStateOptions<S> = {}
 
-    const memoFunc = () => atomWithHash<T>(urlKey, defaultState, { replaceState: true })
+    const memoFunc = () => atomWithHash<S>(urlKey, defaultState, {replaceState: true})
     // get return value type
     type MemoReturnType = ReturnType<typeof memoFunc>
     const stateAtom: MemoReturnType = useMemo(memoFunc, [])
@@ -47,7 +47,7 @@ const useMuiForm = <T extends IState = IState>(urlKey: string) => {
     const [errors, setErrors] = useState<any>(generateErrorState(defaultState))
     const [touched, setTouched] = useState<any>(generateTouchedState(defaultState))
 
-    const handleChange = (type: InputType) => (e: ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (type: 'boolean' | 'other') => (e: ChangeEvent<HTMLInputElement>) => {
         // update touched state to reflect user interaction
         setTouched((ps: any) => {
             return {
@@ -56,75 +56,75 @@ const useMuiForm = <T extends IState = IState>(urlKey: string) => {
             }
         })
         // update state to reflect user input
-        const eventValue = type === InputType.CHECKBOX ? e.target.checked : e.target.value
+        const eventValue = type === 'boolean' ? e.target.checked : e.target.value
 
         setState((ps: any) => {
-            const cf = stateOptions[e.target.name].format
+            const cf = stateOptions[e.target.name]?.format
             return {
                 ...ps,
-                [e.target.name]: cf ? cf(eventValue as string) : eventValue,
+                [e.target.name]: cf ? cf(eventValue as S[string]) : eventValue,
             }
         })
     }
 
-    const validate = (data: IState, checkTouched: boolean = true): IErrorState => {
-        const newErrors: IErrorState = {}
+    const validate = (data: S, checkTouched: boolean = true): IErrorState<S> => {
+        const newErrors: Partial<IErrorState<S>> = {}
 
         for (const key in defaultState) {
 
-            if (stateOptions[key].disabled) continue
+            if (stateOptions[key]?.disabled) continue
             if (!touched[key] && checkTouched) continue
 
             // check if field is required
-            if (stateOptions[key].required && !data[key]) {
+            if (stateOptions[key]?.required && !data[key]) {
                 newErrors[key] = 'Field is required'
                 continue
             }
 
-            const checkFunc = stateOptions[key].validate
+            const checkFunc = stateOptions[key]?.validate
             if (checkFunc !== undefined) {
                 const res: string | true = checkFunc(data[key], data)
                 newErrors[key] = res === true ? undefined : res
             }
         }
-        return newErrors
+        return newErrors as IErrorState<S>
     }
 
     useEffect(() => {
         setErrors(validate(state))
     }, [state])
 
-    const register = (name: string, options: IOptions = { type: InputType.TEXT }) => {
-        // @ts-ignore
-        defaultState[name] = options.type === InputType.CHECKBOX ? definedOr(options.default, false) : definedOr(options.default, '')
+
+    // name is a key of S
+    // default value is the value of S[name]
+    // const register = (name: keyof S, defaultValue: , options: IOptions<S[typeof name], S> = {}): Register<S[typeof name], S> => {
+    const register = <K extends keyof S>(name: K, defaultValue: S[K], options: IOptions<S[K], S> = {}): Register<S[K], S> => {
+        defaultState[name] = defaultValue
 
         stateOptions[name] = {
-            required: options.type === InputType.CHECKBOX ? false : definedOr(options.required, false),
+            required: definedOr(options.required, false),
             validate: options.validate,
-            format: options.type !== InputType.CHECKBOX ? options.format : undefined,
+            format: options.format,
             disabled: options.disabled,
         }
-        let res: any = {
-            name,
-            onChange: handleChange(options.type || InputType.TEXT),
-            error: Boolean(errors[name]),
-            disabled: options.disabled || false,
-            helperText: options.helperText || errors[name],
-        }
 
-        if (options.type === InputType.CHECKBOX) {
-            res = {
-                ...res,
-                checked: definedOr(state[name], definedOr(options.default, false)),
+        const res = typeof defaultValue === 'boolean'
+            ? {
+                name,
+                onChange: handleChange('boolean'),
+                error: Boolean(errors[name]),
+                disabled: options.disabled || false,
+                helperText: options.helperText || errors[name],
+                checked: definedOr(state[name], defaultValue),
+            } : {
+                name,
+                onChange: handleChange('other'),
+                error: Boolean(errors[name]),
+                disabled: options.disabled || false,
+                helperText: options.helperText || errors[name],
+                value: definedOr(state[name], defaultValue),
             }
-        } else {
-            res = {
-                ...res,
-                value: definedOr(state[name], definedOr(options.default, '')),
-            }
-        }
-
-        return res
+        return res as unknown as Register<S[typeof name], S>
     }
 
     const forceValidate = (): boolean => {
