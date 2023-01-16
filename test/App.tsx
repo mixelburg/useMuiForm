@@ -1,11 +1,12 @@
 import {FC} from "react";
-import {Button, Checkbox, FormControlLabel, MenuItem, Paper, Stack, TextField} from "@mui/material";
+import {Button, Checkbox, FormControlLabel, MenuItem, Paper, Select, Stack, TextField} from "@mui/material";
 import useMuiForm from "../src";
 import {ValidateFunc} from "../src/types";
 
 type State = {
     email: string
     role: 'root' | 'admin' | 'developer' | 'user' | 'guest'
+    secondRole: 'root' | 'admin' | 'developer' | 'user' | 'guest'
     racoon: boolean
 }
 
@@ -36,7 +37,7 @@ const App: FC = () => {
                 label='email'
                 type='email'
                 variant='outlined'
-                {...register('email', '', { required: true, validate: emailValidator })}
+                {...register('email', 'test@root.com', { required: true, validate: emailValidator })}
                 fullWidth
             />
             <TextField
@@ -52,6 +53,18 @@ const App: FC = () => {
                     )
                 }
             </TextField>
+            <Select
+                label='role'
+                variant='outlined'
+                {...register('secondRole', 'root',{})}
+                fullWidth
+            >
+                {
+                    ['root', 'admin', 'developer', 'user', 'guest'].map(role =>
+                        <MenuItem key={role} value={role}>{role}</MenuItem>
+                    )
+                }
+            </Select>
             <FormControlLabel
                 label="Are you a racoon?"
                 control={
@@ -60,6 +73,9 @@ const App: FC = () => {
                     />
                 }
             />
+            <Button variant='contained' color='secondary' onClick={clear}>
+                RESET
+            </Button>
             <Button variant='contained' onClick={submit}>
                 SUBMIT
             </Button>

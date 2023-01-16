@@ -1,4 +1,4 @@
-import {ChangeEvent, useEffect, useMemo, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {useAtom} from 'jotai'
 import {RESET} from 'jotai/utils'
 import {atomWithHash} from 'jotai-location'
@@ -32,7 +32,6 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
     return true
 }
 
-
 const useMuiForm = <S extends IState = IState>(urlKey: string) => {
     const defaultState: S = {} as S
     const stateOptions: IStateOptions<S> = {}
@@ -47,7 +46,7 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
     const [errors, setErrors] = useState<any>(generateErrorState(defaultState))
     const [touched, setTouched] = useState<any>(generateTouchedState(defaultState))
 
-    const handleChange = (type: 'boolean' | 'other') => (e: ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (type: 'boolean' | 'other') => (e: any) => {
         // update touched state to reflect user interaction
         setTouched((ps: any) => {
             return {

@@ -41,7 +41,7 @@ export type Register<V, S> = V extends boolean ? BooleanRegister<S> : GenericReg
 
 export interface BaseRegister<S> {
     name: keyof S;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onChange: (e: any) => void;
     error: boolean;
     disabled: boolean;
     helperText: string;
