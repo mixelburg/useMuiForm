@@ -143,6 +143,7 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
 
     return {
         state,
+        setState,
         errors,
         register,
         forceValidate,
