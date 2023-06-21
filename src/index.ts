@@ -45,6 +45,7 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
 
     const [errors, setErrors] = useState<any>(generateErrorState(defaultState))
     const [touched, setTouched] = useState<any>(generateTouchedState(defaultState))
+    const isAnyTouched = Object.values(touched).some(v => !!v)
 
     const handleChange = (type: 'boolean' | 'other') => (e: any) => {
         // update touched state to reflect user interaction
@@ -148,6 +149,8 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
         register,
         forceValidate,
         clear,
+        touched,
+        isAnyTouched
     }
 }
 
