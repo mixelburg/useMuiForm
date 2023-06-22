@@ -35,7 +35,6 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
 const useMuiForm = <S extends IState = IState>(urlKey: string) => {
     const defaultState: S = {} as S
     const stateOptions: IStateOptions<S> = {}
-
     const memoFunc = () => atomWithHash<S>(urlKey, defaultState, {replaceState: true})
     // get return value type
     type MemoReturnType = ReturnType<typeof memoFunc>
@@ -46,6 +45,8 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
     const [errors, setErrors] = useState<any>(generateErrorState(defaultState))
     const [touched, setTouched] = useState<any>(generateTouchedState(defaultState))
     const isAnyTouched = Object.values(touched).some(v => !!v)
+
+    const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState)
 
     const handleChange = (type: 'boolean' | 'other') => (e: any) => {
         // update touched state to reflect user interaction
@@ -150,7 +151,8 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
         forceValidate,
         clear,
         touched,
-        isAnyTouched
+        isAnyTouched,
+        isChanged
     }
 }
 
