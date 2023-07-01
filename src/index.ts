@@ -53,14 +53,14 @@ const useMuiForm = <State extends IState = IState>(urlKey: string) => {
         setTouched((ps: any) => {
             return {
                 ...ps,
-                [event.target.name]: true,
+                [name]: true,
             }
         })
         // update state to reflect user input
         const eventValue = event.target
             ? type === 'boolean'
-                ? event.target.checked
-                : event.target.value
+                ? event.target?.checked
+                : event.target?.value
             : event
 
         setState((ps: any) => {
