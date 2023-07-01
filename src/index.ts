@@ -32,10 +32,10 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
     return true
 }
 
-const useMuiForm = <S extends IState = IState>(urlKey: string) => {
-    const defaultState: S = {} as S
-    const stateOptions: IStateOptions<S> = {}
-    const memoFunc = () => atomWithHash<S>(urlKey, defaultState, {replaceState: true})
+const useMuiForm = <State extends IState = IState>(urlKey: string) => {
+    const defaultState: State = {} as State
+    const stateOptions: IStateOptions<State> = {}
+    const memoFunc = () => atomWithHash<State>(urlKey, defaultState, {replaceState: true})
     // get return value type
     type MemoReturnType = ReturnType<typeof memoFunc>
     const stateAtom: MemoReturnType = useMemo(memoFunc, [])
@@ -48,28 +48,32 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
 
     const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState)
 
-    const handleChange = (type: 'boolean' | 'other') => (e: any) => {
+    const handleChange = <Key extends keyof State>(name: Key, type: 'boolean' | 'other') => (event: any) => {
         // update touched state to reflect user interaction
         setTouched((ps: any) => {
             return {
                 ...ps,
-                [e.target.name]: true,
+                [event.target.name]: true,
             }
         })
         // update state to reflect user input
-        const eventValue = type === 'boolean' ? e.target.checked : e.target.value
+        const eventValue = event.target
+            ? type === 'boolean'
+                ? event.target.checked
+                : event.target.value
+            : event
 
         setState((ps: any) => {
-            const cf = stateOptions[e.target.name]?.format
+            const cf = stateOptions[name]?.format
             return {
                 ...ps,
-                [e.target.name]: cf ? cf(eventValue as S[string]) : eventValue,
+                [name]: cf ? cf(eventValue as State[Key]) : eventValue,
             }
         })
     }
 
-    const validate = (data: S, checkTouched: boolean = true): IErrorState<S> => {
-        const newErrors: Partial<IErrorState<S>> = {}
+    const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
+        const newErrors: Partial<IErrorState<State>> = {}
 
         for (const key in defaultState) {
 
@@ -88,7 +92,7 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
                 newErrors[key] = res === true ? undefined : res
             }
         }
-        return newErrors as IErrorState<S>
+        return newErrors as IErrorState<State>
     }
 
     useEffect(() => {
@@ -99,7 +103,7 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
     // name is a key of S
     // default value is the value of S[name]
     // const register = (name: keyof S, defaultValue: , options: IOptions<S[typeof name], S> = {}): Register<S[typeof name], S> => {
-    const register = <K extends keyof S>(name: K, defaultValue: S[K], options: IOptions<S[K], S> = {}): Register<S[K], S> => {
+    const register = <Key extends keyof State>(name: Key, defaultValue: State[Key], options: IOptions<State[Key], State> = {}): Register<State[Key], State> => {
         defaultState[name] = defaultValue
 
         stateOptions[name] = {
@@ -112,20 +116,20 @@ const useMuiForm = <S extends IState = IState>(urlKey: string) => {
         const res = typeof defaultValue === 'boolean'
             ? {
                 name,
-                onChange: handleChange('boolean'),
+                onChange: handleChange(name, 'boolean'),
                 error: Boolean(errors[name]),
                 disabled: options.disabled || false,
                 helperText: options.helperText || errors[name],
                 checked: definedOr(state[name], defaultValue),
             } : {
                 name,
-                onChange: handleChange('other'),
+                onChange: handleChange(name, 'other'),
                 error: Boolean(errors[name]),
                 disabled: options.disabled || false,
                 helperText: options.helperText || errors[name],
                 value: definedOr(state[name], defaultValue),
             }
-        return res as unknown as Register<S[typeof name], S>
+        return res as unknown as Register<State[typeof name], State>
     }
 
     const forceValidate = (): boolean => {
