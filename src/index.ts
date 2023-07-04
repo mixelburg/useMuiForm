@@ -35,7 +35,7 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
 const useMuiForm = <State extends IState = IState>(urlKey: string) => {
     const defaultState: State = {} as State
     const stateOptions: IStateOptions<State> = {}
-    const memoFunc = () => atomWithHash<State>(urlKey, defaultState, {replaceState: true})
+    const memoFunc = () => atomWithHash<State>(urlKey, defaultState, {setHash: 'replaceState'})
     // get return value type
     type MemoReturnType = ReturnType<typeof memoFunc>
     const stateAtom: MemoReturnType = useMemo(memoFunc, [])

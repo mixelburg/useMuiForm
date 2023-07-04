@@ -1,5 +1,3 @@
-import React from "react";
-
 export type ValidateFunc<V, S> = (value: V, state: S) => string | true
 export type FormatFunc<V> = (value: V) => V | undefined
 
@@ -50,6 +48,7 @@ export interface BaseRegister<S> {
 export interface BooleanRegister<S> extends BaseRegister<S> {
     checked: boolean;
 }
+
 export interface GenericRegister<V, S> extends BaseRegister<S> {
     value: V;
 }

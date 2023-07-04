@@ -1,6 +1,6 @@
 {
   "name": "usemuiform",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -10,11 +10,11 @@
   "author": "mixelburg",
   "license": "ISC",
   "dependencies": {
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@mui/material": "^5.11.4",
-    "jotai": "^1.12.1",
-    "jotai-location": "^0.3.2",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.13.6",
+    "jotai": "^2.2.1",
+    "jotai-location": "^0.5.1",
     "react": "^18.2.0"
   },
   "files": [
@@ -24,7 +24,7 @@
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.0.1",
     "react-dom": "^18.2.0",
-    "typescript": "^4.9.4",
-    "vite": "^4.0.4"
+    "typescript": "^5.1.6",
+    "vite": "^4.3.9"
   }
 }
