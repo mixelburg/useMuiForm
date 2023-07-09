@@ -76,3 +76,14 @@ const App: FC = () => {
 export default App
 
 ```
+
+# changelog
+
+## 2.3.0
+```javascript
+// from
+const {state, register, forceValidate, clear} = useMuiForm<State>('login')
+
+// to
+const {state, register, forceValidate, clear} = useMuiForm<State>()
+```

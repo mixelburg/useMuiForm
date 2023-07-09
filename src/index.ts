@@ -1,7 +1,5 @@
 import {useEffect, useMemo, useState} from 'react'
-import {useAtom} from 'jotai'
-import {RESET} from 'jotai/utils'
-import {atomWithHash} from 'jotai-location'
+import {Atom, atom, PrimitiveAtom, useAtom} from 'jotai'
 import {IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register} from "./types";
 
 
@@ -32,13 +30,14 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
     return true
 }
 
-const useMuiForm = <State extends IState = IState>(urlKey: string) => {
+const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState: State) => Atom<State>) => {
     const defaultState: State = {} as State
     const stateOptions: IStateOptions<State> = {}
-    const memoFunc = () => atomWithHash<State>(urlKey, defaultState, {setHash: 'replaceState'})
-    // get return value type
-    type MemoReturnType = ReturnType<typeof memoFunc>
-    const stateAtom: MemoReturnType = useMemo(memoFunc, [])
+
+    const defaultAtomProvider = () => atom<State>(defaultState)
+    const memoFunc = atomProvider || defaultAtomProvider
+
+    const stateAtom: PrimitiveAtom<State> = useMemo(memoFunc as any, [])
 
     const [state, setState] = useAtom(stateAtom)
 
@@ -117,7 +116,7 @@ const useMuiForm = <State extends IState = IState>(urlKey: string) => {
             ? {
                 name,
                 onChange: handleChange(name, 'boolean'),
-                error: Boolean(errors[name]),
+                error: errors[name] ? true : undefined,
                 disabled: options.disabled || false,
                 helperText: options.helperText || errors[name],
                 checked: definedOr(state[name], defaultValue),
@@ -144,7 +143,6 @@ const useMuiForm = <State extends IState = IState>(urlKey: string) => {
         setState(defaultState)
         setErrors(generateErrorState(defaultState))
         setTouched(generateTouchedState(defaultState))
-        setState(RESET)
     }
 
     return {
