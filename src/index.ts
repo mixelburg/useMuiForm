@@ -106,7 +106,7 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
         defaultState[name] = defaultValue
 
         stateOptions[name] = {
-            required: definedOr(options.required, false),
+            required: definedOr(options.required, true),
             validate: options.validate,
             format: options.format,
             disabled: options.disabled,
