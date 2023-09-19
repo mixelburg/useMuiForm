@@ -30,12 +30,12 @@ const checkValid = <S>(errors: IErrorState<S>): boolean => {
     return true
 }
 
-const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState: State) => Atom<State>) => {
+const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState: State) => Atom<State> | PrimitiveAtom<State>) => {
     const defaultState: State = {} as State
     const stateOptions: IStateOptions<State> = {}
 
     const defaultAtomProvider = () => atom<State>(defaultState)
-    const memoFunc = atomProvider || defaultAtomProvider
+    const memoFunc = atomProvider ? () => atomProvider(defaultState) : defaultAtomProvider
 
     const stateAtom: PrimitiveAtom<State> = useMemo(memoFunc as any, [])
 

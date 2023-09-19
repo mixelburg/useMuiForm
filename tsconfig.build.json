@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
@@ -9,8 +10,8 @@
       "DOM"
     ],
     "sourceMap": true,
-    "esModuleInterop": true,
     "declaration": true,
+    "noEmit": false
   },
   "include": [
     "src/**/*.ts"

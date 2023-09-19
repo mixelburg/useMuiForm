@@ -1,5 +1,5 @@
 export type ValidateFunc<V, S> = (value: V, state: S) => string | true
-export type FormatFunc<V> = (value: V) => V | undefined
+export type FormatFunc<V> = (value: V) => V
 
 
 export interface IOptions<V, S> {

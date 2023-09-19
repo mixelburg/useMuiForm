@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
-
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "removeComments": true,
@@ -28,10 +27,13 @@
     "strict": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "alwaysStrict": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
@@ -43,5 +45,6 @@
   },
   "include": [
     "src",
-  ],
+    "test"
+  ]
 }

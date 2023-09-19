@@ -47,3 +47,6 @@ Thumbs.db
 *.wmv
 
 dist
+
+package-lock.json
+pnpm-lock.yaml
