@@ -39,7 +39,6 @@ const App: FC = () => {
             // wait 1 second
             await new Promise(resolve => setTimeout(resolve, 1000))
             setSubmitting(false)
-            // clear()
         }
     }
 

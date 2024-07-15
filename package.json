@@ -1,11 +1,11 @@
 {
   "name": "usemuiform",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "dev": "vite --host"
+    "dev": "vite"
   },
   "author": "mixelburg",
   "license": "ISC",

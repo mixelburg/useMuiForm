@@ -149,6 +149,7 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
         state,
         setState,
         errors,
+        setErrors,
         register,
         forceValidate,
         clear,
