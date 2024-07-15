@@ -2,6 +2,12 @@
 
 A custom React hook that provides utilities for form management, especially for Material-UI based forms.
 
+## Start with why?
+This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form)
+It uses similar api and similar design decisions, but it is made specifically for Material-UI components.
+So you won't need to write a lot of boilerplate code to wrap and make it work with Material-UI components.
+And Mui-X component. 
+
 # Installation
 
 ```shell
@@ -46,6 +52,7 @@ const App: FC = () => {
     }
 
     // components example
+    // regular TextField with validation
     <TextField
         label='email'
         type='email'
@@ -53,6 +60,7 @@ const App: FC = () => {
         {...register('email', '', {required: true, validate: emailValidator})}
         fullWidth
     />
+    // select with options
     <TextField
         select
         label='role'
@@ -66,6 +74,7 @@ const App: FC = () => {
             )
         }
     </TextField>
+    // checkbox
     <FormControlLabel
         label="Are you a racoon?"
         control={
@@ -141,7 +150,6 @@ A custom hook that provides form management utilities.
 - react
 - jotai
 
-# CHANGELOG 
 
 
 
