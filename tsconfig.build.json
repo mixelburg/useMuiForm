@@ -1,19 +1,14 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "module": "ESNext",
-    "target": "ESNext",
-    "moduleResolution": "Node",
-    "outDir": "dist",
-    "lib": [
-      "es2018",
-      "DOM"
-    ],
-    "sourceMap": true,
-    "declaration": true,
-    "noEmit": false
-  },
-  "include": [
-    "src/**/*.ts"
-  ]
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "ESNext",
+		"target": "ESNext",
+		"moduleResolution": "Node",
+		"outDir": "dist",
+		"lib": ["es2018", "DOM"],
+		"sourceMap": true,
+		"declaration": true,
+		"noEmit": false
+	},
+	"include": ["src/**/*.ts"]
 }
