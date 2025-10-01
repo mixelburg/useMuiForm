@@ -1,155 +1,175 @@
 # useMuiForm
 
-A custom React hook that provides utilities for form management, especially for Material-UI based forms.
+A lightweight custom React hook for **form management** with first-class support for **Material-UI (MUI)** and **MUI-X** components.
 
-## Start with why?
-This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form)
-It uses similar api and similar design decisions, but it is made specifically for Material-UI components.
-So you won't need to write a lot of boilerplate code to wrap and make it work with Material-UI components.
-And Mui-X component. 
+---
 
-# Installation
+## ✨ Why?
 
-```shell
+This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form).  
+It follows similar API patterns and design decisions, but is **purpose-built for MUI**.
+
+That means less boilerplate, smoother integration, and ready-to-use form utilities without extra wrappers.
+
+---
+
+## 📦 Installation
+
+Choose your package manager:
+
+```bash
 npm i usemuiform
 ```
 
-```shell
+```bash
 pnpm add usemuiform
 ```
 
-```shell
+```bash
 yarn add usemuiform
 ```
 
-```shell
+```bash
 bun add usemuiform
 ```
 
-## Usage
+---
 
-```typescript jsx
+## 🚀 Demo
+
+[👉 Live Demo on StackBlitz](https://stackblitz.com/github/mixelburg/usemuiform?file=test%2FApp.tsx)
+
+---
+
+## 🛠️ Usage
+
+```tsx
 type State = {
-    email: string
-    role: 'root' | 'admin' | 'developer' | 'user' | 'guest'
-    racoon: boolean
+  email: string
+  role: 'root' | 'admin' | 'developer' | 'user' | 'guest'
+  racoon: boolean
 }
 
 const App: FC = () => {
-    const {state, register, forceValidate, clear} = useMuiForm<State>()
+  const { state, register, forceValidate, clear } = useMuiForm<State>()
 
-    const submit = () => {
-        if (forceValidate()) {
-            clear()
-        }
-    }
+  const submit = () => {
+    if (forceValidate()) clear()
+  }
 
-    // validator example
-    const emailValidator: ValidateFunc<string, State> = (value) => {
-        if (value.length < 5) return 'Email must be at least 5 characters long'
-        if (!value.includes('@')) return 'Email must contain @'
-        return true
-    }
+  const emailValidator: ValidateFunc<string, State> = (value) => {
+    if (value.length < 5) return 'Email must be at least 5 characters long'
+    if (!value.includes('@')) return 'Email must contain @'
+    return true
+  }
 
-    // components example
-    // regular TextField with validation
-    <TextField
-        label='email'
-        type='email'
-        variant='outlined'
-        {...register('email', '', {required: true, validate: emailValidator})}
+  return (
+    <>
+      {/* TextField with validation */}
+      <TextField
+        label="email"
+        type="email"
+        variant="outlined"
+        {...register('email', '', { required: true, validate: emailValidator })}
         fullWidth
-    />
-    // select with options
-    <TextField
+      />
+
+      {/* Select with options */}
+      <TextField
         select
-        label='role'
-        variant='outlined'
-        {...register('role', 'root', {})}
+        label="role"
+        variant="outlined"
+        {...register('role', 'root')}
         fullWidth
-    >
-        {
-            ['root', 'admin', 'developer', 'user', 'guest'].map(role =>
-                <MenuItem key={role} value={role}>{role}</MenuItem>
-            )
-        }
-    </TextField>
-    // checkbox
-    <FormControlLabel
-        label="Are you a racoon?"
-        control={
-            <Checkbox
-                {...register('racoon', false, {})}
-            />
-        }
-    />
-    <Button variant='contained' onClick={submit}>
-        SUBMIT
-    </Button>
-}
+      >
+        {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
+          <MenuItem key={role} value={role}>
+            {role}
+          </MenuItem>
+        ))}
+      </TextField>
 
+      {/* Checkbox */}
+      <FormControlLabel
+        label="Are you a racoon?"
+        control={<Checkbox {...register('racoon', false)} />}
+      />
+
+      <Button variant="contained" onClick={submit}>
+        SUBMIT
+      </Button>
+    </>
+  )
+}
 ```
 
-## Advanced usage
+---
 
-you can you a custom atom as a state storage
+## ⚡ Advanced Usage
 
-```typescript jsx
-import {atomWithHash} from "jotai-location";
-import {atomWithStorage} from "jotai/utils";
+You can provide a custom **Jotai atom** as state storage:
+
+```tsx
+import { atom } from 'jotai'
+import { atomWithHash } from 'jotai-location'
+import { atomWithStorage } from 'jotai/utils'
 
 const {} = useMuiForm<State>((defaultState) => atom<State>(defaultState))
 const {} = useMuiForm<State>((defaultState) => atomWithHash<State>('state', defaultState))
 const {} = useMuiForm<State>((defaultState) => atomWithStorage<State>('state', defaultState))
 ```
 
-## API
+---
 
-`useMuiForm(atomProvider?)`
-A custom hook that provides form management utilities.
+## 📚 API
 
-### Parameters:
+### `useMuiForm(atomProvider?)`
 
-- `atomProvider`: (optional) A function that takes a default state and returns an Atom or PrimitiveAtom.
+Custom hook that provides form management utilities.
 
-### Returns:
+#### Parameters
+- **`atomProvider`** (optional): Function `(defaultState) => Atom | PrimitiveAtom`.
 
-- `state`: The current form state.
-- `setState`: Function to update the form state.
-- `errors`: Object containing any validation errors.
-- `register`: Function to register a form field.
-- `forceValidate`: Function to force validation of the form.
-- `clear`: Function to reset the form state.
-- `touched`: Object indicating which fields have been touched/interacted with.
-- `isAnyTouched`: Boolean indicating if any form field has been touched.
-- `isChanged`: Boolean indicating if the form state has changed from the default.
+#### Returns
+- **`state`** – Current form state
+- **`setState`** – Update function
+- **`errors`** – Validation errors object
+- **`register`** – Field registration function
+- **`forceValidate`** – Triggers validation on all fields
+- **`clear`** – Resets the form state
+- **`touched`** – Map of touched fields
+- **`isAnyTouched`** – `true` if any field touched
+- **`isChanged`** – `true` if state differs from defaults
 
-- `register(name, defaultValue, options)`: Registers a form field.
-  #### Parameters:
-    - `name`: The name of the field.
-    - `defaultValue`: The default value for the field.
-    - `options` : (optional) An object with the following properties:
-        - `required`: Boolean indicating if the field is required.
-        - `validate`: A validation function.
-          `<T>(value: T) => T | true`
-        - `format`: A formatting function.
-          `<T>(value: T) => T`
-        - `disabled`: Boolean indicating if the field is disabled.
-        - `helperText`: Helper text for the field.
-  #### Returns:
-    - `name`: The name of the field.
-    - `value`: The current value of the field.
-    - `onChange`: Function to update the value of the field.
-    - `error`: Boolean indicating if the field has a validation error.
-    - `helperText`: Helper text for the field. (contains validation error if present)
-    - `disabled`: Boolean indicating if the field is disabled.
-  > `value` is replaced with `checked` if the default value is a boolean.
+---
 
-## Dependencies
+### `register(name, defaultValue, options?)`
 
-- react
-- jotai
+Registers a form field.
 
+**Parameters:**
+- `name`: Field name
+- `defaultValue`: Default field value
+- `options`:
+    - `required?: boolean`
+    - `validate?: (value) => true | string`
+    - `format?: (value) => any`
+    - `disabled?: boolean`
+    - `helperText?: string`
 
+**Returns:**
+- `name`
+- `value` (or `checked` if boolean)
+- `onChange` handler
+- `error` flag
+- `helperText` (includes validation error if any)
+- `disabled`
 
+---
 
+## 📦 Dependencies
+
+- `react`
+- `jotai`
+
+---
