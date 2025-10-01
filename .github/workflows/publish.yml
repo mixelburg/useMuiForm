@@ -36,7 +36,4 @@ jobs:
 
       - name: Publish to npm
         run: |
-          ACCESS=$(bun run --silent node -p "require('./package.json').publishConfig?.access || 'restricted'")
-          EXTRA=""
-          if [ "$ACCESS" = "public" ]; then EXTRA="--access public"; fi
-          bun publish --provenance $EXTRA
+          npm publish
