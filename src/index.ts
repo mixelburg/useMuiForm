@@ -1,187 +1,167 @@
-import { useEffect, useMemo, useState } from "react";
-import { Atom, atom, PrimitiveAtom, useAtom } from "jotai";
-import {
-	IErrorState,
-	IOptions,
-	IState,
-	IStateOptions,
-	ITouchedState,
-	Register,
-} from "./types";
+import { atom, type PrimitiveAtom, useAtom } from "jotai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
 
-const definedOr = <T, V>(value: T, other: V) =>
-	value === undefined ? other : value;
+type PropsWithAtom<State extends IState> = { atom: PrimitiveAtom<State> };
+type PropsWithDefaults<State extends IState> = { defaultValues: State };
+type UseMuiFormOpts<State extends IState> = PropsWithAtom<State> | PropsWithDefaults<State>;
 
-const generateErrorState = <S>(defaultState: S): IErrorState<S> => {
-	const errorState: Partial<IErrorState<S>> = {};
-	for (const key in defaultState) {
-		errorState[key] = undefined;
-	}
-	return errorState as IErrorState<S>;
+const isPropsWithAtom = <State extends IState>(opts: UseMuiFormOpts<State>): opts is PropsWithAtom<State> =>
+  "atom" in opts && !!opts.atom;
+
+const isPropsWithDefaults = <State extends IState>(opts: UseMuiFormOpts<State>): opts is PropsWithDefaults<State> =>
+  "defaultValues" in opts && !!opts.defaultValues;
+
+const definedOr = <T, V>(value: T, other: V) => (value === undefined ? other : value);
+
+const generateErrorState = <S>(base: S): IErrorState<S> => {
+  const e: Partial<IErrorState<S>> = {};
+  for (const k in base) e[k] = undefined;
+  return e as IErrorState<S>;
 };
 
-const generateTouchedState = <S>(
-	defaultState: S,
-	flag: boolean = false,
-): ITouchedState<S> => {
-	const touchedState: Partial<ITouchedState<S>> = {};
-	for (const key in defaultState) {
-		touchedState[key] = flag;
-	}
-	return touchedState as ITouchedState<S>;
+const generateTouchedState = <S>(base: S, flag = false): ITouchedState<S> => {
+  const t: Partial<ITouchedState<S>> = {};
+  for (const k in base) t[k] = flag;
+  return t as ITouchedState<S>;
 };
 
 const checkValid = <S>(errors: IErrorState<S>): boolean => {
-	for (const key in errors) {
-		if (errors[key] !== undefined) {
-			return false;
-		}
-	}
-	return true;
+  for (const k in errors) if (errors[k] !== undefined) return false;
+  return true;
 };
 
-const useMuiForm = <State extends IState = IState>(
-	atomProvider?: (defaultState: State) => Atom<State> | PrimitiveAtom<State>,
-) => {
-	const defaultState: State = {} as State;
-	const stateOptions: IStateOptions<State> = {};
+export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
+  const hasAtom = opts ? isPropsWithAtom(opts) : false;
+  const hasDefaults = opts ? isPropsWithDefaults(opts) : false;
+  if (opts && !hasAtom && !hasDefaults) {
+    throw new Error("useMuiForm: provide either { atom } or { defaultValues }.");
+  }
 
-	const defaultAtomProvider = () => atom<State>(defaultState);
-	const memoFunc = atomProvider
-		? () => atomProvider(defaultState)
-		: defaultAtomProvider;
+  const stateAtom: PrimitiveAtom<State> = useMemo(
+    () => (hasAtom ? (opts as PropsWithAtom<State>).atom : atom<State>((hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : ({} as State)))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
-	const stateAtom: PrimitiveAtom<State> = useMemo(memoFunc as any, []);
+  const [state, setState] = useAtom(stateAtom);
 
-	const [state, setState] = useAtom(stateAtom);
+  // Baseline used for clear(), error/touched shape, and isChanged comparison.
+  // If defaultValues were provided, use them; otherwise, capture the atom's initial state on first render.
+  const defaultStateRef = useRef<State>((hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : state) as State);
+  const defaultState = defaultStateRef.current;
 
-	const [errors, setErrors] = useState<any>(generateErrorState(defaultState));
-	const [touched, setTouched] = useState<any>(
-		generateTouchedState(defaultState),
-	);
-	const isAnyTouched = Object.values(touched).some((v) => !!v);
+  const stateOptionsRef = useRef<IStateOptions<State>>({});
+  const stateOptions = stateOptionsRef.current;
 
-	const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
+  const [errors, setErrors] = useState<IErrorState<State>>(generateErrorState(defaultState));
+  const [touched, setTouched] = useState<ITouchedState<State>>(generateTouchedState(defaultState));
 
-	const handleChange =
-		<Key extends keyof State>(name: Key, type: "boolean" | "other") =>
-		(event: any) => {
-			// update touched state to reflect user interaction
-			setTouched((ps: any) => {
-				return {
-					...ps,
-					[name]: true,
-				};
-			});
-			// update state to reflect user input
-			const eventValue = event.target
-				? type === "boolean"
-					? event.target?.checked
-					: event.target?.value
-				: event;
+  const isAnyTouched = Object.values(touched).some(Boolean);
+  const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
 
-			setState((ps: any) => {
-				const cf = stateOptions[name]?.format;
-				return {
-					...ps,
-					[name]: cf ? cf(eventValue as State[Key]) : eventValue,
-				};
-			});
-		};
+  const handleChange =
+    <Key extends keyof State>(name: Key, type: "boolean" | "other") =>
+    (event: any) => {
+      setTouched((ps) => ({ ...ps, [name]: true }));
 
-	const validate = (
-		data: State,
-		checkTouched: boolean = true,
-	): IErrorState<State> => {
-		const newErrors: Partial<IErrorState<State>> = {};
+      const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
 
-		for (const key in defaultState) {
-			if (stateOptions[key]?.disabled) continue;
-			if (!touched[key] && checkTouched) continue;
+      setState((ps: State) => {
+        const cf = stateOptions[name]?.format;
+        return {
+          ...ps,
+          [name]: cf ? cf(eventValue as State[Key]) : (eventValue as State[Key]),
+        };
+      });
+    };
 
-			// check if field is required
-			if (stateOptions[key]?.required && !data[key]) {
-				newErrors[key] = "Field is required";
-				continue;
-			}
+  const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
+    const newErrors: Partial<IErrorState<State>> = {};
 
-			const checkFunc = stateOptions[key]?.validate;
-			if (checkFunc !== undefined) {
-				const res: string | true = checkFunc(data[key], data);
-				newErrors[key] = res === true ? undefined : res;
-			}
-		}
-		return newErrors as IErrorState<State>;
-	};
+    for (const key in defaultState) {
+      if (stateOptions[key]?.disabled) continue;
+      if (!touched[key as keyof State] && checkTouched) continue;
 
-	useEffect(() => {
-		setErrors(validate(state));
-	}, [state]);
+      if (stateOptions[key]?.required && !data[key as keyof State]) {
+        newErrors[key as keyof State] = "Field is required" as any;
+        continue;
+      }
 
-	// name is a key of S
-	// default value is the value of S[name]
-	// const register = (name: keyof S, defaultValue: , options: IOptions<S[typeof name], S> = {}): Register<S[typeof name], S> => {
-	const register = <Key extends keyof State>(
-		name: Key,
-		defaultValue: State[Key],
-		options: IOptions<State[Key], State> = {},
-	): Register<State[Key], State> => {
-		defaultState[name] = defaultValue;
+      const checkFunc = stateOptions[key]?.validate as ((v: any, all: State) => string | true) | undefined;
 
-		stateOptions[name] = {
-			required: definedOr(options.required, true),
-			validate: options.validate,
-			format: options.format,
-			disabled: options.disabled,
-		};
+      if (checkFunc) {
+        const res = checkFunc(data[key as keyof State], data);
+        newErrors[key as keyof State] = (res === true ? undefined : res) as any;
+      }
+    }
+    return newErrors as IErrorState<State>;
+  };
 
-		const res =
-			typeof defaultValue === "boolean"
-				? {
-						name,
-						onChange: handleChange(name, "boolean"),
-						error: errors[name] ? true : undefined,
-						disabled: options.disabled || false,
-						helperText: options.helperText || errors[name],
-						checked: definedOr(state[name], defaultValue),
-					}
-				: {
-						name,
-						onChange: handleChange(name, "other"),
-						error: Boolean(errors[name]),
-						disabled: options.disabled || false,
-						helperText: options.helperText || errors[name],
-						value: definedOr(state[name], defaultValue),
-					};
-		return res as unknown as Register<State[typeof name], State>;
-	};
+  useEffect(() => {
+    setErrors(validate(state));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
-	const forceValidate = (): boolean => {
-		setTouched(generateTouchedState(defaultState, true));
-		const res = validate(state, false);
-		setErrors(res);
+  const register = <Key extends keyof State>(
+    name: Key,
+    options: IOptions<State[Key], State> = {},
+  ): Register<State[Key], State> => {
+    // Persist field settings
+    stateOptions[name] = {
+      required: definedOr(options.required, true),
+      validate: options.validate,
+      format: options.format,
+      disabled: options.disabled,
+    };
 
-		return checkValid(res);
-	};
+    const base = defaultState[name];
+    const current = state[name];
 
-	const clear = () => {
-		setState(defaultState);
-		setErrors(generateErrorState(defaultState));
-		setTouched(generateTouchedState(defaultState));
-	};
+    if (typeof base === "boolean") {
+      return {
+        name,
+        onChange: handleChange(name, "boolean"),
+        error: Boolean((errors as any)[name]),
+        disabled: options.disabled || false,
+        helperText: options.helperText || (errors as any)[name],
+        checked: definedOr(current as any, base as any) as boolean,
+      } as unknown as Register<State[Key], State>;
+    }
 
-	return {
-		state,
-		setState,
-		errors,
-		setErrors,
-		register,
-		forceValidate,
-		clear,
-		touched,
-		isAnyTouched,
-		isChanged,
-	};
-};
+    return {
+      name,
+      onChange: handleChange(name, "other"),
+      error: Boolean((errors as any)[name]),
+      disabled: options.disabled || false,
+      helperText: options.helperText || (errors as any)[name],
+      value: definedOr(current as any, base as any) as Exclude<State[Key], boolean>,
+    } as unknown as Register<State[Key], State>;
+  };
 
-export default useMuiForm;
+  const forceValidate = (): boolean => {
+    setTouched(generateTouchedState(defaultState, true));
+    const res = validate(state, false);
+    setErrors(res);
+    return checkValid(res);
+  };
+
+  const clear = () => {
+    setState(defaultState);
+    setErrors(generateErrorState(defaultState));
+    setTouched(generateTouchedState(defaultState));
+  };
+
+  return {
+    state,
+    setState,
+    errors,
+    setErrors,
+    register,
+    forceValidate,
+    clear,
+    touched,
+    isAnyTouched,
+    isChanged,
+  };
+}

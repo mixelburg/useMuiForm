@@ -44,14 +44,18 @@ bun add usemuiform
 ## 🛠️ Usage
 
 ```tsx
+import { useMuiForm } from 'usemuiform'
+
 type State = {
   email: string
-  role: 'root' | 'admin' | 'developer' | 'user' | 'guest'
+  role: 'root' | 'admin' | 'developer' | 'user' | 'guest' | ''
   racoon: boolean
 }
 
 const App: FC = () => {
-  const { state, register, forceValidate, clear } = useMuiForm<State>()
+  const { state, register, forceValidate, clear } = useMuiForm<State>({
+    defaultValues: { email: '', role: '', racoon: false }
+  })
 
   const submit = () => {
     if (forceValidate()) clear()
@@ -70,18 +74,12 @@ const App: FC = () => {
         label="email"
         type="email"
         variant="outlined"
-        {...register('email', '', { required: true, validate: emailValidator })}
+        {...register('email', { required: true, validate: emailValidator })}
         fullWidth
       />
 
       {/* Select with options */}
-      <TextField
-        select
-        label="role"
-        variant="outlined"
-        {...register('role', 'root')}
-        fullWidth
-      >
+      <TextField select label="role" variant="outlined" {...register('role')} fullWidth>
         {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
           <MenuItem key={role} value={role}>
             {role}
@@ -90,10 +88,7 @@ const App: FC = () => {
       </TextField>
 
       {/* Checkbox */}
-      <FormControlLabel
-        label="Are you a racoon?"
-        control={<Checkbox {...register('racoon', false)} />}
-      />
+      <FormControlLabel label="Are you a racoon?" control={<Checkbox {...register('racoon')} />} />
 
       <Button variant="contained" onClick={submit}>
         SUBMIT
@@ -114,21 +109,23 @@ import { atom } from 'jotai'
 import { atomWithHash } from 'jotai-location'
 import { atomWithStorage } from 'jotai/utils'
 
-const {} = useMuiForm<State>((defaultState) => atom<State>(defaultState))
-const {} = useMuiForm<State>((defaultState) => atomWithHash<State>('state', defaultState))
-const {} = useMuiForm<State>((defaultState) => atomWithStorage<State>('state', defaultState))
+const {} = useMuiForm<State>({ atom: atom<State>({ email: '', role: '', racoon: false }) })
+const {} = useMuiForm<State>({ atom: atomWithHash<State>('state', { email: '', role: '', racoon: false }) })
+const {} = useMuiForm<State>({ atom: atomWithStorage<State>('state', { email: '', role: '', racoon: false }) })
 ```
 
 ---
 
 ## 📚 API
 
-### `useMuiForm(atomProvider?)`
+### `useMuiForm(options?)`
 
 Custom hook that provides form management utilities.
 
 #### Parameters
-- **`atomProvider`** (optional): Function `(defaultState) => Atom | PrimitiveAtom`.
+- **`options`** (optional): one of
+  - `{ defaultValues: State }`
+  - `{ atom: PrimitiveAtom<State> }`
 
 #### Returns
 - **`state`** – Current form state
@@ -143,16 +140,15 @@ Custom hook that provides form management utilities.
 
 ---
 
-### `register(name, defaultValue, options?)`
+### `register(name, options?)`
 
 Registers a form field.
 
 **Parameters:**
 - `name`: Field name
-- `defaultValue`: Default field value
 - `options`:
     - `required?: boolean`
-    - `validate?: (value) => true | string`
+    - `validate?: (value, state) => true | string`
     - `format?: (value) => any`
     - `disabled?: boolean`
     - `helperText?: string`
@@ -173,3 +169,4 @@ Registers a form field.
 - `jotai`
 
 ---
+
