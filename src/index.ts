@@ -122,7 +122,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
       return {
         name,
         onChange: handleChange(name, "boolean"),
-        error: Boolean((errors as any)[name]),
+        error: (errors as any)[name] ? true : undefined,
         disabled: options.disabled || false,
         helperText: options.helperText || (errors as any)[name],
         checked: definedOr(current as any, base as any) as boolean,
@@ -132,7 +132,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     return {
       name,
       onChange: handleChange(name, "other"),
-      error: Boolean((errors as any)[name]),
+      error: (errors as any)[name] ? true : undefined,
       disabled: options.disabled || false,
       helperText: options.helperText || (errors as any)[name],
       value: definedOr(current as any, base as any) as Exclude<State[Key], boolean>,

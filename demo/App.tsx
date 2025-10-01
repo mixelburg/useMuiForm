@@ -17,7 +17,7 @@ import dayjs from "dayjs";
 import { type FC, useState } from "react";
 import JSONPretty from "react-json-pretty";
 import type { ValidateFunc } from "@/src/types";
-import { useMuiForm } from "../src";
+import { useMuiForm } from '@/src';
 import "react-json-pretty/themes/monikai.css";
 
 type State = {

@@ -27,7 +27,10 @@
       "correctness": {
         "useExhaustiveDependencies": "off"
       },
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "off"
+      }
     }
   },
   "javascript": {

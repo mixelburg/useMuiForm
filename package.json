@@ -1,39 +1,41 @@
 {
-	"name": "usemuiform",
-	"version": "2.6.0",
-	"description": "",
-	"main": "dist/index.js",
-	"scripts": {
-		"build": "tsc --build tsconfig.build.json",
-		"dev": "vite",
-		"format": "biome format --write"
-	},
-	"author": "mixelburg",
-	"license": "ISC",
-	"dependencies": {},
-	"peerDependencies": {
-		"react": "^18.2.0",
-		"jotai": "^2.4.2"
-	},
-	"files": [
-		"dist"
-	],
-	"devDependencies": {
-		"@types/node": "^20.6.2",
-		"@biomejs/biome": "2.2.4",
-		"@emotion/react": "^11.11.1",
-		"@emotion/styled": "^11.11.0",
-		"@mui/material": "^5.14.10",
-		"@mui/x-date-pickers": "^6.14.0",
-		"@types/react": "^18.2.22",
-		"@types/react-dom": "^18.2.7",
-		"@vitejs/plugin-react": "^4.0.4",
-		"dayjs": "^1.11.9",
-		"jotai-location": "^0.5.1",
-		"react-dom": "^18.2.0",
-		"react-json-pretty": "^2.2.0",
-		"tslib": "^2.6.2",
-		"typescript": "^5.2.2",
-		"vite": "^4.4.9"
-	}
+  "name": "usemuiform",
+  "version": "2.6.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "dev": "rsbuild dev",
+    "format": "biome format --write"
+  },
+  "author": "mixelburg",
+  "license": "ISC",
+  "peerDependencies": {
+    "jotai": "*"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.2",
+    "@mui/x-date-pickers": "^8.12.0",
+    "@rsbuild/core": "^1.5.13",
+    "@rsbuild/plugin-react": "^1.4.1",
+    "@rsbuild/plugin-type-check": "^1.2.4",
+    "@types/node": "^24.6.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "dayjs": "^1.11.18",
+    "jotai-location": "^0.6.2",
+    "react-json-pretty": "^2.2.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.7",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@types/react": "^19.1.1",
+    "@types/react-dom": "^19.1.1"
+  }
 }
