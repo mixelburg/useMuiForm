@@ -38,7 +38,7 @@ const App: FC = () => {
       racoon: false,
       birth: dayjs(),
       person: {
-        name: "John Doe",
+        name: "",
       },
     },
   });
@@ -96,9 +96,6 @@ const App: FC = () => {
         <Stack maxHeight={500} spacing={2}>
           <h1>Hello World</h1>
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimeField label="birth" {...birthProps} />
-          </LocalizationProvider>
           <TextField label="name" variant="outlined" {...register("person.name")} />
           <TextField
             label="email"
@@ -121,6 +118,10 @@ const App: FC = () => {
             <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkBoxProps} />} />
             <FormHelperText error={checkboxError}>{checkboxHelperText}</FormHelperText>
           </FormGroup>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimeField label="birth" {...birthProps} />
+          </LocalizationProvider>
+
           <Button variant="contained" color="warning" onClick={alterState}>
             CHANGE STATE
           </Button>

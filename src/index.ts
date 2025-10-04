@@ -3,7 +3,7 @@ import { get, set } from "lodash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
 import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
-import { checkValid, definedOr, generateErrorState, generateTouchedState } from "./utils";
+import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from './utils'
 
 export { UseMuiFormConfigProvider, type UseMuiFormConfig };
 
@@ -40,11 +40,15 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   // If defaultValues were provided, use them; otherwise, capture the atom's initial state on first render.
   const defaultState = (hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : state) as State;
 
+  const statePaths = collectPaths(defaultState);
+
   const stateOptionsRef = useRef<IStateOptions<State>>({});
   const stateOptions = stateOptionsRef.current;
 
   const [errors, setErrors] = useState<IErrorState<State>>(generateErrorState(defaultState));
   const [touched, setTouched] = useState<ITouchedState<State>>(generateTouchedState(defaultState));
+
+  console.log('generateErrorState', generateErrorState(defaultState));
 
   const isAnyTouched = Object.values(touched).some(Boolean);
   const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
@@ -69,25 +73,30 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   };
 
   const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
-    const newErrors: Partial<IErrorState<State>> = {};
+    const newErrors = generateErrorState(defaultState);
 
-    for (const key in defaultState) {
-      if (stateOptions[key]?.disabled) continue;
-      if (!touched[key as keyof State] && checkTouched) continue;
+    for (const path of statePaths) {
+      const pathKey = path as string;
+      const options = get(stateOptions, pathKey);
 
-      if (stateOptions[key]?.required && !data[key as keyof State]) {
-        newErrors[key as keyof State] = (config?.requiredFieldErrorMessage ?? "Field is required") as any;
+      if (options?.disabled) continue;
+      if (!get(touched, pathKey) && checkTouched) continue;
+
+      const value = get(data, pathKey);
+
+      if (options?.required && !value) {
+        set(newErrors, pathKey, config?.requiredFieldErrorMessage ?? "Field is required");
         continue;
       }
 
-      const checkFunc = stateOptions[key]?.validate as ((v: any, all: State) => string | true) | undefined;
+      const checkFunc = options?.validate as ((v: any, all: State) => string | true) | undefined;
 
       if (checkFunc) {
-        const res = checkFunc(data[key as keyof State], data);
-        newErrors[key as keyof State] = (res === true ? undefined : res) as any;
+        const res = checkFunc(value, data);
+        set(newErrors, pathKey, res === true ? undefined : res);
       }
     }
-    return newErrors as IErrorState<State>;
+    return newErrors;
   };
 
   useEffect(() => {

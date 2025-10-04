@@ -35,11 +35,15 @@ export type DotPath<T> = T extends object
   : never;
 
 export type IErrorState<S> = {
-  [key in keyof S]: undefined | string;
+  [key in keyof S]: S[key] extends object
+    ? IErrorState<S[key]>
+    : undefined | string;
 };
 
 export type ITouchedState<S> = {
-  [key in keyof S]: boolean;
+  [key in keyof S]: S[key] extends object
+    ? ITouchedState<S[key]>
+    : boolean;
 };
 
 export type Register<V, S> = V extends boolean ? BooleanRegister<S> : GenericRegister<V, S>;
