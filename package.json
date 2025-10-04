@@ -25,17 +25,21 @@
     "@rsbuild/core": "^1.5.13",
     "@rsbuild/plugin-react": "^1.4.1",
     "@rsbuild/plugin-type-check": "^1.2.4",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^24.6.1",
+    "@types/react": "^19.1.1",
+    "@types/react-dom": "^19.1.1",
     "@vitejs/plugin-react": "^5.0.4",
     "dayjs": "^1.11.18",
     "jotai-location": "^0.6.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-json-pretty": "^2.2.0",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",
-    "vite": "^7.1.7",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "@types/react": "^19.1.1",
-    "@types/react-dom": "^19.1.1"
+    "vite": "^7.1.7"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }

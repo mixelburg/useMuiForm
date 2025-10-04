@@ -25,6 +25,15 @@ export interface IState {
   [key: string]: any;
 }
 
+// Type to represent dot-notation paths within an object
+export type DotPath<T> = T extends object
+  ? {
+      [K in keyof T & string]: T[K] extends object
+        ? K | `${K}.${DotPath<T[K]>}`
+        : K;
+    }[keyof T & string]
+  : never;
+
 export type IErrorState<S> = {
   [key in keyof S]: undefined | string;
 };
@@ -36,7 +45,7 @@ export type ITouchedState<S> = {
 export type Register<V, S> = V extends boolean ? BooleanRegister<S> : GenericRegister<V, S>;
 
 export interface BaseRegister<S> {
-  name: keyof S;
+  name: DotPath<S>;
   onChange: (e: any) => void;
   error: boolean;
   disabled: boolean;

@@ -16,8 +16,8 @@ import { DateTimeField } from "@mui/x-date-pickers/DateTimeField";
 import dayjs from "dayjs";
 import { type FC, useState } from "react";
 import JSONPretty from "react-json-pretty";
+import { useMuiForm } from "@/src";
 import type { ValidateFunc } from "@/src/types";
-import { useMuiForm } from '@/src';
 import "react-json-pretty/themes/monikai.css";
 
 type State = {
@@ -25,6 +25,9 @@ type State = {
   role: "root" | "admin" | "developer" | "user" | "guest" | "";
   racoon: boolean;
   birth: dayjs.Dayjs;
+  person: {
+    name: string;
+  };
 };
 
 const App: FC = () => {
@@ -34,6 +37,9 @@ const App: FC = () => {
       role: "",
       racoon: false,
       birth: dayjs(),
+      person: {
+        name: "John Doe",
+      },
     },
   });
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +99,7 @@ const App: FC = () => {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimeField label="birth" {...birthProps} />
           </LocalizationProvider>
+          <TextField label="name" variant="outlined" {...register("person.name")} />
           <TextField
             label="email"
             type="email"

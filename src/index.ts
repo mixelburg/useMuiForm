@@ -1,7 +1,8 @@
 import { atom, type PrimitiveAtom, useAtom } from "jotai";
+import { get, set } from "lodash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
-import type { IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
+import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
 import { checkValid, definedOr, generateErrorState, generateTouchedState } from "./utils";
 
 export { UseMuiFormConfigProvider, type UseMuiFormConfig };
@@ -37,10 +38,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
   // Baseline used for clear(), error/touched shape, and isChanged comparison.
   // If defaultValues were provided, use them; otherwise, capture the atom's initial state on first render.
-  const defaultStateRef = useRef<State>(
-    (hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : state) as State,
-  );
-  const defaultState = defaultStateRef.current;
+  const defaultState = (hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : state) as State;
 
   const stateOptionsRef = useRef<IStateOptions<State>>({});
   const stateOptions = stateOptionsRef.current;
@@ -51,21 +49,24 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const isAnyTouched = Object.values(touched).some(Boolean);
   const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
 
-  const handleChange =
-    <Key extends keyof State>(name: Key, type: "boolean" | "other") =>
-    (event: any) => {
-      setTouched((ps) => ({ ...ps, [name]: true }));
+  const handleChange = (name: DotPath<State>, type: "boolean" | "other") => (event: any) => {
+    setTouched((ps) => {
+      const newTouched = { ...ps };
+      set(newTouched, name, true);
+      return newTouched;
+    });
 
-      const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
+    const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
 
-      setState((ps: State) => {
-        const cf = stateOptions[name]?.format;
-        return {
-          ...ps,
-          [name]: cf ? cf(eventValue as State[Key]) : (eventValue as State[Key]),
-        };
-      });
-    };
+    setState((ps: State) => {
+      const newState = { ...ps };
+      const pathKey = name as string;
+      const cf = get(stateOptions, pathKey)?.format;
+      const finalValue = cf ? cf(eventValue) : eventValue;
+      set(newState, name, finalValue);
+      return newState;
+    });
+  };
 
   const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
     const newErrors: Partial<IErrorState<State>> = {};
@@ -94,40 +95,42 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const register = <Key extends keyof State>(
-    name: Key,
-    options: IOptions<State[Key], State> = {},
-  ): Register<State[Key], State> => {
+  const register = <Path extends DotPath<State>>(
+    name: Path,
+    options: IOptions<any, State> = {},
+  ): Register<any, State> => {
+    const pathKey = name as string;
+
     // Persist field settings
-    stateOptions[name] = {
+    set(stateOptions, pathKey, {
       required: definedOr(options.required, true),
       validate: options.validate,
       format: options.format,
       disabled: options.disabled,
-    };
+    });
 
-    const base = defaultState[name];
-    const current = state[name];
+    const base = get(defaultState, name);
+    const current = get(state, name);
 
     if (typeof base === "boolean") {
       return {
         name,
         onChange: handleChange(name, "boolean"),
-        error: (errors as any)[name] ? true : undefined,
+        error: get(errors, name) ? true : undefined,
         disabled: options.disabled || false,
-        helperText: options.helperText || (errors as any)[name],
-        checked: definedOr(current as any, base as any) as boolean,
-      } as unknown as Register<State[Key], State>;
+        helperText: options.helperText || get(errors, name),
+        checked: definedOr(current, base) as boolean,
+      } as unknown as Register<any, State>;
     }
 
     return {
       name,
       onChange: handleChange(name, "other"),
-      error: (errors as any)[name] ? true : undefined,
+      error: get(errors, name) ? true : undefined,
       disabled: options.disabled || false,
-      helperText: options.helperText || (errors as any)[name],
-      value: definedOr(current as any, base as any) as Exclude<State[Key], boolean>,
-    } as unknown as Register<State[Key], State>;
+      helperText: options.helperText || get(errors, name),
+      value: definedOr(current, base),
+    } as unknown as Register<any, State>;
   };
 
   const forceValidate = (): boolean => {
