@@ -47,7 +47,6 @@ const App: FC = () => {
   const submit = async () => {
     if (submitting) return;
     if (forceValidate()) {
-      console.log("setting true");
       setSubmitting(true);
       // wait 1 second
       await new Promise((resolve) => setTimeout(resolve, 1000));

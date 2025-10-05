@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "dev": "rsbuild dev",
-    "format": "biome format --write"
+    "format": "biome check --write --unsafe"
   },
   "author": "mixelburg",
   "license": "ISC",

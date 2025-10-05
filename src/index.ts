@@ -3,7 +3,7 @@ import { get, set } from "lodash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
 import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
-import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from './utils'
+import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from "./utils";
 
 export { UseMuiFormConfigProvider, type UseMuiFormConfig };
 
@@ -47,8 +47,6 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
   const [errors, setErrors] = useState<IErrorState<State>>(generateErrorState(defaultState));
   const [touched, setTouched] = useState<ITouchedState<State>>(generateTouchedState(defaultState));
-
-  console.log('generateErrorState', generateErrorState(defaultState));
 
   const isAnyTouched = Object.values(touched).some(Boolean);
   const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
