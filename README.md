@@ -3,7 +3,7 @@
 A lightweight custom React hook for **form management** with first-class support for **Material-UI (MUI)** and **MUI-X** components.
 
 
-📚 **[Full Documentation](https://mixelburg.github.io/useMuiForm)** - Comprehensive guides, API reference, and examples
+📚 **[Documentation](https://mixelburg.github.io/useMuiForm)** - Comprehensive guides, API reference, and examples
 
 ---
 
@@ -14,20 +14,6 @@ It follows similar API patterns and design decisions, but is **purpose-built for
 ---
 
 ## 📦 Installation
-
-Choose your package manager:
-
-```bash
-npm i usemuiform
-```
-
-```bash
-pnpm add usemuiform
-```
-
-```bash
-yarn add usemuiform
-```
 
 ```bash
 bun add usemuiform
