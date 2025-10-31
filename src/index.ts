@@ -7,8 +7,24 @@ import { checkValid, collectPaths, definedOr, generateErrorState, generateTouche
 
 export { UseMuiFormConfigProvider, type UseMuiFormConfig };
 
+/**
+ * Options for configuring the useMuiForm hook.
+ *
+ * @typeParam State - The shape of the form state object
+ *
+ * @example
+ * ```tsx
+ * type FormState = { email: string; age: number };
+ * const form = useMuiForm<FormState>({
+ *   defaultValues: { email: '', age: 0 },
+ *   config: { defaultOpts: { required: true } }
+ * });
+ * ```
+ */
 export type UseMuiFormOpts<State extends IState> = {
+  /** Initial values for the form fields */
   defaultValues?: State;
+  /** Configuration options for form behavior */
   config?: UseMuiFormConfig;
 };
 
@@ -19,6 +35,46 @@ const defaultConfig: UseMuiFormConfig = {
   },
 };
 
+/**
+ * A lightweight React hook for form management with first-class support for Material-UI (MUI) components.
+ *
+ * @typeParam State - The shape of your form state object
+ *
+ * @param opts - Configuration options for the form
+ * @returns An object containing form state, handlers, and utility functions
+ *
+ * @example
+ * Basic usage with TextField and validation
+ * ```tsx
+ * type FormState = {
+ *   email: string;
+ *   role: 'admin' | 'user' | '';
+ *   isActive: boolean;
+ * };
+ *
+ * const { state, register, forceValidate, clear } = useMuiForm<FormState>({
+ *   defaultValues: { email: '', role: '', isActive: false }
+ * });
+ *
+ * const emailValidator: ValidateFunc<string, FormState> = (value) => {
+ *   if (!value.includes('@')) return 'Email must contain @';
+ *   return true;
+ * };
+ *
+ * // In JSX:
+ * <TextField
+ *   label="Email"
+ *   {...register('email', { required: true, validate: emailValidator })}
+ * />
+ * ```
+ *
+ * @remarks
+ * This hook provides:
+ * - Automatic validation and error handling
+ * - Support for both controlled and lazy (uncontrolled) inputs
+ * - TypeScript-safe field registration with dot notation for nested paths
+ * - Integration with MUI TextField, Checkbox, Select, and other components
+ */
 export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const contextConfig = useUseMuiFormConfig();
   const config = useMemo(() => {

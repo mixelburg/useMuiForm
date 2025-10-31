@@ -49,5 +49,6 @@ Thumbs.db
 dist
 
 package-lock.json
-pnpm-lock.yaml
-bun.lock
+
+# TypeDoc generated documentation
+docs
