@@ -2,6 +2,8 @@
 
 A lightweight custom React hook for **form management** with first-class support for **Material-UI (MUI)** and **MUI-X** components.
 
+📢 **[What's new in v4.0.0?](./RELEASE_NOTES_v4.0.0.md)** - Configuration system, lazy input improvements & more!
+
 ---
 
 ## ✨ Why?
@@ -94,58 +96,3 @@ const App: FC = () => {
   )
 }
 ```
-
----
-
-
-## 📚 API
-
-### `useMuiForm(options?)`
-
-Custom hook that provides form management utilities.
-
-#### Parameters
-- **`options`** (optional): `{ defaultValues?: State }`
-
-#### Returns
-- **`state`** – Current form state
-- **`setState`** – Update function
-- **`errors`** – Validation errors object
-- **`register`** – Field registration function
-- **`forceValidate`** – Triggers validation on all fields
-- **`clear`** – Resets the form state
-- **`touched`** – Map of touched fields
-- **`isAnyTouched`** – `true` if any field touched
-- **`isChanged`** – `true` if state differs from defaults
-
----
-
-### `register(name, options?)`
-
-Registers a form field.
-
-**Parameters:**
-- `name`: Field name
-- `options`:
-    - `required?: boolean`
-    - `validate?: (value, state) => true | string`
-    - `format?: (value) => any`
-    - `disabled?: boolean`
-    - `helperText?: string`
-
-**Returns:**
-- `name`
-- `value` (or `checked` if boolean)
-- `onChange` handler
-- `error` flag
-- `helperText` (includes validation error if any)
-- `disabled`
-
----
-
-## 📦 Dependencies
-
-- `react`
-
----
-
