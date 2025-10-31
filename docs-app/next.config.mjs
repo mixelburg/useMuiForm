@@ -9,7 +9,6 @@ const config = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === "production" ? "/usemuiform" : "",
 };
 
 export default withMDX(config);
