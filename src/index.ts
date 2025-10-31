@@ -41,8 +41,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
     setState((ps: State) => {
       const newState = { ...ps };
-      const pathKey = name as string;
-      const cf = get(stateOptions, pathKey)?.format;
+      const cf = get(stateOptions, name)?.format;
       const finalValue = cf ? cf(eventValue) : eventValue;
       set(newState, name, finalValue);
       return newState;
@@ -53,16 +52,15 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     const newErrors = generateErrorState(defaultState);
 
     for (const path of statePaths) {
-      const pathKey = path as string;
-      const options = get(stateOptions, pathKey);
+      const options = get(stateOptions, path);
 
       if (options?.disabled) continue;
-      if (!get(touched, pathKey) && checkTouched) continue;
+      if (!get(touched, path) && checkTouched) continue;
 
-      const value = get(data, pathKey);
+      const value = get(data, path);
 
       if (options?.required && !value) {
-        set(newErrors, pathKey, config?.requiredFieldErrorMessage ?? "Field is required");
+        set(newErrors, path, config?.requiredFieldErrorMessage ?? "Field is required");
         continue;
       }
 
@@ -70,7 +68,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
       if (checkFunc) {
         const res = checkFunc(value, data);
-        set(newErrors, pathKey, res === true ? undefined : res);
+        set(newErrors, path, res === true ? undefined : res);
       }
     }
     return newErrors;
@@ -84,10 +82,8 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     name: Path,
     options: IOptions<any, State> = {},
   ): Register<any, State> => {
-    const pathKey = name as string;
-
     // Persist field settings
-    set(stateOptions, pathKey, {
+    set(stateOptions, name, {
       required: definedOr(options.required, true),
       validate: options.validate,
       format: options.format,
