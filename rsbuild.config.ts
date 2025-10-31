@@ -1,6 +1,6 @@
-import {defineConfig} from "@rsbuild/core";
-import {pluginReact} from "@rsbuild/plugin-react";
-import {pluginTypeCheck} from "@rsbuild/plugin-type-check";
+import { defineConfig } from "@rsbuild/core";
+import { pluginReact } from "@rsbuild/plugin-react";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
 
 export default defineConfig({
   plugins: [
@@ -31,7 +31,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     port: 3000,
   },
 });

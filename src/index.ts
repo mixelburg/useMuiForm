@@ -1,10 +1,10 @@
-import {get, set} from "lodash";
-import {useEffect, useMemo, useRef, useState} from "react";
-import {type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig} from "./config";
-import type {DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register} from "./types";
-import {checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState} from "./utils";
+import { get, set } from "lodash";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
+import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
+import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from "./utils";
 
-export {UseMuiFormConfigProvider, type UseMuiFormConfig};
+export { UseMuiFormConfigProvider, type UseMuiFormConfig };
 
 export type UseMuiFormOpts<State extends IState> = { defaultValues?: State };
 
@@ -12,13 +12,10 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const config = useUseMuiFormConfig();
 
   // Initialize default state from options or empty object
-  const {defaultState, statePaths} = useMemo(
-    () => {
-      const defaultState: State = opts?.defaultValues || ({} as State);
-      return {defaultState, statePaths: collectPaths(defaultState)};
-    },
-    [],
-  );
+  const { defaultState, statePaths } = useMemo(() => {
+    const defaultState: State = opts?.defaultValues || ({} as State);
+    return { defaultState, statePaths: collectPaths(defaultState) };
+  }, []);
 
   const [state, setState] = useState<State>(defaultState);
 
@@ -35,7 +32,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
   const handleChange = (name: DotPath<State>, type: "boolean" | "other") => (event: any) => {
     setTouched((ps) => {
-      const newTouched = {...ps};
+      const newTouched = { ...ps };
       set(newTouched, name, true);
       return newTouched;
     });
@@ -43,7 +40,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
 
     setState((ps: State) => {
-      const newState = {...ps};
+      const newState = { ...ps };
       const pathKey = name as string;
       const cf = get(stateOptions, pathKey)?.format;
       const finalValue = cf ? cf(eventValue) : eventValue;
