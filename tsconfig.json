@@ -16,10 +16,7 @@
     "importHelpers": true,
     "target": "es2017",
     "module": "esnext",
-    "lib": [
-      "es2017",
-      "dom"
-    ],
+    "lib": ["es2017", "dom"],
     "skipDefaultLibCheck": true,
     "useDefineForClassFields": true,
     "allowJs": false,
@@ -35,16 +32,9 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src",
-    "test"
-  ]
+  "include": ["src", "demo"]
 }
