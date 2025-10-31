@@ -128,6 +128,12 @@ const App: FC = () => {
             {...register("description", {
               required: true,
               lazy: true,
+              validate: (value) => {
+                if (value.length < 10) {
+                  return "Description must be at least 10 characters long";
+                }
+                return true;
+              },
             })}
             fullWidth
             multiline

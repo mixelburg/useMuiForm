@@ -31,34 +31,43 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const isAnyTouched = useMemo(() => Object.values(touched).some(Boolean), [touched]);
   const isChanged = useMemo(() => JSON.stringify(state) !== JSON.stringify(defaultState), [state, defaultState]);
 
+  // Extract field validation logic
+  const validateField = useCallback(
+    (value: any, path: string, data: State): string | undefined => {
+      const options = get(stateOptionsRef.current, path);
+
+      if (options?.disabled) return undefined;
+
+      if (options?.required && !value) {
+        return config?.requiredFieldErrorMessage ?? "Field is required";
+      }
+
+      const checkFunc = options?.validate as ((v: any, all: State) => string | true) | undefined;
+      if (checkFunc) {
+        const res = checkFunc(value, data);
+        return res === true ? undefined : res;
+      }
+
+      return undefined;
+    },
+    [config],
+  );
+
   // Memoize validate function to use in useEffect
   const validate = useCallback(
     (data: State, checkTouched: boolean = true): IErrorState<State> => {
       const newErrors = generateErrorState(defaultState);
 
       for (const path of statePaths) {
-        const options = get(stateOptionsRef.current, path);
-
-        if (options?.disabled) continue;
         if (checkTouched && !get(touched, path)) continue;
 
         const value = get(data, path);
-
-        if (options?.required && !value) {
-          set(newErrors, path, config?.requiredFieldErrorMessage ?? "Field is required");
-          continue;
-        }
-
-        const checkFunc = options?.validate as ((v: any, all: State) => string | true) | undefined;
-
-        if (checkFunc) {
-          const res = checkFunc(value, data);
-          set(newErrors, path, res === true ? undefined : res);
-        }
+        const error = validateField(value, path, data);
+        set(newErrors, path, error);
       }
       return newErrors;
     },
-    [defaultState, statePaths, touched, config],
+    [defaultState, statePaths, touched, validateField],
   );
 
   // Memoize handleChange to avoid recreation
@@ -102,10 +111,20 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
       setState((ps: State) => {
         const newState = { ...ps };
         set(newState, name, finalValue);
+
+        // Validate this specific field for lazy inputs
+        const fieldError = validateField(finalValue, name, newState);
+
+        setErrors((prevErrors) => {
+          const newErrors = { ...prevErrors };
+          set(newErrors, name, fieldError);
+          return newErrors;
+        });
+
         return newState;
       });
     },
-    [],
+    [validateField],
   );
 
   useEffect(() => {
@@ -144,9 +163,8 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
         onBlur: handleBlur(name),
       };
 
-      const controlleddProps = {
+      const controlledProps = {
         ...baseProps,
-        onChange: handleChange(name, "boolean"),
       };
 
       // Lazy (uncontrolled) mode
@@ -167,13 +185,15 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
       // Controlled mode
       if (typeof base === "boolean") {
         return {
-          ...controlleddProps,
+          ...controlledProps,
+          onChange: handleChange(name, "boolean"),
           checked: definedOr(current, base) as boolean,
         } as unknown as Register<any, State>;
       }
 
       return {
-        ...controlleddProps,
+        ...controlledProps,
+        onChange: handleChange(name, "other"),
         value: definedOr(current, base),
       } as unknown as Register<any, State>;
     },
@@ -200,6 +220,18 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     return checkValid(res);
   }, [defaultState, state, validate]);
 
+  const getValues = useCallback((): State => {
+    // Collect values from lazy inputs
+    const collectedState = { ...state };
+    inputRefsRef.current.forEach((ref, path) => {
+      const value = ref.value ?? ref.checked;
+      const options = get(stateOptionsRef.current, path);
+      const finalValue = options?.format ? options.format(value) : value;
+      set(collectedState, path, finalValue);
+    });
+    return collectedState;
+  }, [state]);
+
   const clear = useCallback(() => {
     hasForceValidatedRef.current = false;
     setState(defaultState);
@@ -220,12 +252,19 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   return {
     state,
     setState,
+
     errors,
     setErrors,
-    register,
-    forceValidate,
-    clear,
+
     touched,
+    setTouched,
+
+    register,
+
+    forceValidate,
+    getValues,
+    clear,
+
     isAnyTouched,
     isChanged,
   };
