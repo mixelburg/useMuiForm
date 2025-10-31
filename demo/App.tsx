@@ -28,6 +28,7 @@ type State = {
   person: {
     name: string;
   };
+  description: string;
 };
 
 const App: FC = () => {
@@ -40,6 +41,7 @@ const App: FC = () => {
       person: {
         name: "",
       },
+      description: "",
     },
   });
   const [submitting, setSubmitting] = useState(false);
@@ -120,6 +122,17 @@ const App: FC = () => {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimeField label="birth" {...birthProps} />
           </LocalizationProvider>
+          <TextField
+            label="description (lazy - updates on blur)"
+            variant="outlined"
+            {...register("description", {
+              required: true,
+              lazy: true,
+            })}
+            fullWidth
+            multiline
+            minRows={3}
+          />
 
           <Button variant="contained" color="warning" onClick={alterState}>
             CHANGE STATE

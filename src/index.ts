@@ -21,6 +21,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const [state, setState] = useState<State>(defaultState);
 
   const stateOptionsRef = useRef<IStateOptions<State>>({});
+  const inputRefsRef = useRef<Map<string, any>>(new Map());
   const hasForceValidatedRef = useRef<boolean>(false);
 
   const [errors, setErrors] = useState<IErrorState<State>>(() => generateErrorState(defaultState));
@@ -82,6 +83,31 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     [],
   );
 
+  // Memoize handleBlur for lazy inputs
+  const handleBlur = useCallback(
+    (name: DotPath<State>) => () => {
+      const ref = inputRefsRef.current.get(name);
+      if (!ref) return;
+
+      const value = ref.value ?? ref.checked;
+      const options = get(stateOptionsRef.current, name);
+      const finalValue = options?.format ? options.format(value) : value;
+
+      setTouched((ps) => {
+        const newTouched = { ...ps };
+        set(newTouched, name, true);
+        return newTouched;
+      });
+
+      setState((ps: State) => {
+        const newState = { ...ps };
+        set(newState, name, finalValue);
+        return newState;
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
     if (hasForceValidatedRef.current) setErrors(validate(state));
   }, [state, validate]);
@@ -94,6 +120,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
         validate: options.validate,
         format: options.format,
         disabled: options.disabled,
+        lazy: options.lazy,
       });
 
       const base = get(defaultState, name);
@@ -102,33 +129,73 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
       const hasError = Boolean(fieldError);
       const helperText = options.helperText || fieldError;
 
+      const baseProps = {
+        name,
+        error: hasError,
+        helperText,
+        disabled: options.disabled || false,
+      };
+
+      const lazyProps = {
+        ...baseProps,
+        inputRef: (ref: any) => {
+          if (ref) inputRefsRef.current.set(name, ref);
+        },
+        onBlur: handleBlur(name),
+      };
+
+      const controlleddProps = {
+        ...baseProps,
+        onChange: handleChange(name, "boolean"),
+      };
+
+      // Lazy (uncontrolled) mode
+      if (options.lazy) {
+        if (typeof base === "boolean") {
+          return {
+            ...lazyProps,
+            defaultChecked: definedOr(current, base) as boolean,
+          } as unknown as Register<any, State>;
+        }
+
+        return {
+          ...lazyProps,
+          defaultValue: definedOr(current, base),
+        } as unknown as Register<any, State>;
+      }
+
+      // Controlled mode
       if (typeof base === "boolean") {
         return {
-          name,
-          onChange: handleChange(name, "boolean"),
-          error: hasError,
-          disabled: options.disabled || false,
-          helperText,
+          ...controlleddProps,
           checked: definedOr(current, base) as boolean,
         } as unknown as Register<any, State>;
       }
 
       return {
-        name,
-        onChange: handleChange(name, "other"),
-        error: hasError,
-        disabled: options.disabled || false,
-        helperText,
+        ...controlleddProps,
         value: definedOr(current, base),
       } as unknown as Register<any, State>;
     },
-    [defaultState, state, errors, handleChange],
+    [defaultState, state, errors, handleChange, handleBlur],
   );
 
   const forceValidate = useCallback((): boolean => {
+    // Collect values from lazy inputs
+    const collectedState = { ...state };
+    inputRefsRef.current.forEach((ref, path) => {
+      const value = ref.value ?? ref.checked;
+      const options = get(stateOptionsRef.current, path);
+      const finalValue = options?.format ? options.format(value) : value;
+      set(collectedState, path, finalValue);
+    });
+
+    // Update state with collected values
+    setState(collectedState);
+
     hasForceValidatedRef.current = true;
     setTouched(generateTouchedState(defaultState, true));
-    const res = validate(state, false);
+    const res = validate(collectedState, false);
     setErrors(res);
     return checkValid(res);
   }, [defaultState, state, validate]);
@@ -138,6 +205,16 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     setState(defaultState);
     setErrors(generateErrorState(defaultState));
     setTouched(generateTouchedState(defaultState));
+
+    // Reset lazy input refs to their default values
+    inputRefsRef.current.forEach((ref, path) => {
+      const defaultValue = get(defaultState, path);
+      if (typeof defaultValue === "boolean") {
+        ref.checked = defaultValue;
+      } else {
+        ref.value = defaultValue ?? "";
+      }
+    });
   }, [defaultState]);
 
   return {

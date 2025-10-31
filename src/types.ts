@@ -8,6 +8,7 @@ export interface IOptions<V, S> {
 
   required?: boolean;
   format?: FormatFunc<V>;
+  lazy?: boolean;
 }
 
 export interface ISettings<V, S> {
@@ -15,6 +16,7 @@ export interface ISettings<V, S> {
   validate?: ValidateFunc<V, S>;
   format?: FormatFunc<V>;
   disabled?: boolean;
+  lazy?: boolean;
 }
 
 export type IStateOptions<S> = {
@@ -44,16 +46,32 @@ export type Register<V, S> = V extends boolean ? BooleanRegister<S> : GenericReg
 
 export interface BaseRegister<S> {
   name: DotPath<S>;
-  onChange: (e: any) => void;
   error: boolean;
   disabled: boolean;
   helperText: string;
 }
 
-export interface BooleanRegister<S> extends BaseRegister<S> {
+export interface ControlledBaseRegister<S> extends BaseRegister<S> {
+  onChange: (e: any) => void;
+}
+
+export interface UncontrolledBaseRegister<S> extends BaseRegister<S> {
+  inputRef: (ref: any) => void;
+  onBlur: () => void;
+}
+
+export interface BooleanRegister<S> extends ControlledBaseRegister<S> {
   checked: boolean;
 }
 
-export interface GenericRegister<V, S> extends BaseRegister<S> {
+export interface GenericRegister<V, S> extends ControlledBaseRegister<S> {
   value: V;
+}
+
+export interface BooleanUncontrolledRegister<S> extends UncontrolledBaseRegister<S> {
+  defaultChecked: boolean;
+}
+
+export interface GenericUncontrolledRegister<V, S> extends UncontrolledBaseRegister<S> {
+  defaultValue: V;
 }
