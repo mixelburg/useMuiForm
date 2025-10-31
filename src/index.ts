@@ -1,3 +1,4 @@
+import deepmerge from "deepmerge";
 import { get, set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
@@ -6,10 +7,27 @@ import { checkValid, collectPaths, definedOr, generateErrorState, generateTouche
 
 export { UseMuiFormConfigProvider, type UseMuiFormConfig };
 
-export type UseMuiFormOpts<State extends IState> = { defaultValues?: State };
+export type UseMuiFormOpts<State extends IState> = {
+  defaultValues?: State;
+  config?: UseMuiFormConfig;
+};
+
+const defaultConfig: UseMuiFormConfig = {
+  defaultOpts: {
+    lazy: false,
+    required: true,
+  },
+};
 
 export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
-  const config = useUseMuiFormConfig();
+  const contextConfig = useUseMuiFormConfig();
+  const config = useMemo(() => {
+    let merged = deepmerge(defaultConfig, contextConfig || {});
+    if (opts?.config) {
+      merged = deepmerge(merged, opts.config);
+    }
+    return merged;
+  }, [contextConfig, opts?.config]);
 
   // Initialize default state from options or empty object - memoize with proper dependencies
   // biome-ignore lint/correctness/useExhaustiveDependencies: <no reason>
@@ -133,26 +151,33 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
   const register = useCallback(
     <Path extends DotPath<State>>(name: Path, options: IOptions<any, State> = {}): Register<any, State> => {
+      // Apply default options from config
+      const mergedOptions = {
+        ...options,
+        required: definedOr(options.required, config?.defaultOpts?.required ?? true),
+        lazy: definedOr(options.lazy, config?.defaultOpts?.lazy ?? false),
+      };
+
       // Persist field settings
       set(stateOptionsRef.current, name, {
-        required: definedOr(options.required, true),
-        validate: options.validate,
-        format: options.format,
-        disabled: options.disabled,
-        lazy: options.lazy,
+        required: mergedOptions.required,
+        validate: mergedOptions.validate,
+        format: mergedOptions.format,
+        disabled: mergedOptions.disabled,
+        lazy: mergedOptions.lazy,
       });
 
       const base = get(defaultState, name);
       const current = get(state, name);
       const fieldError = get(errors, name);
       const hasError = Boolean(fieldError);
-      const helperText = options.helperText || fieldError;
+      const helperText = mergedOptions.helperText || fieldError;
 
       const baseProps = {
         name,
         error: hasError,
         helperText,
-        disabled: options.disabled || false,
+        disabled: mergedOptions.disabled || false,
       };
 
       const lazyProps = {
@@ -168,7 +193,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
       };
 
       // Lazy (uncontrolled) mode
-      if (options.lazy) {
+      if (mergedOptions.lazy) {
         if (typeof base === "boolean") {
           return {
             ...lazyProps,
@@ -197,7 +222,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
         value: definedOr(current, base),
       } as unknown as Register<any, State>;
     },
-    [defaultState, state, errors, handleChange, handleBlur],
+    [defaultState, state, errors, handleChange, handleBlur, config],
   );
 
   const forceValidate = useCallback((): boolean => {
