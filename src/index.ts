@@ -1,5 +1,5 @@
 import { get, set } from "lodash";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
 import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
 import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from "./utils";
@@ -11,7 +11,8 @@ export type UseMuiFormOpts<State extends IState> = { defaultValues?: State };
 export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const config = useUseMuiFormConfig();
 
-  // Initialize default state from options or empty object
+  // Initialize default state from options or empty object - memoize with proper dependencies
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <no reason>
   const { defaultState, statePaths } = useMemo(() => {
     const defaultState: State = opts?.defaultValues || ({} as State);
     return { defaultState, statePaths: collectPaths(defaultState) };
@@ -20,114 +21,124 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const [state, setState] = useState<State>(defaultState);
 
   const stateOptionsRef = useRef<IStateOptions<State>>({});
-  const stateOptions = stateOptionsRef.current;
-
   const hasForceValidatedRef = useRef<boolean>(false);
 
-  const [errors, setErrors] = useState<IErrorState<State>>(generateErrorState(defaultState));
-  const [touched, setTouched] = useState<ITouchedState<State>>(generateTouchedState(defaultState));
+  const [errors, setErrors] = useState<IErrorState<State>>(() => generateErrorState(defaultState));
+  const [touched, setTouched] = useState<ITouchedState<State>>(() => generateTouchedState(defaultState));
 
-  const isAnyTouched = Object.values(touched).some(Boolean);
-  const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState);
+  // Memoize expensive computations
+  const isAnyTouched = useMemo(() => Object.values(touched).some(Boolean), [touched]);
+  const isChanged = useMemo(() => JSON.stringify(state) !== JSON.stringify(defaultState), [state, defaultState]);
 
-  const handleChange = (name: DotPath<State>, type: "boolean" | "other") => (event: any) => {
-    setTouched((ps) => {
-      const newTouched = { ...ps };
-      set(newTouched, name, true);
-      return newTouched;
-    });
+  // Memoize validate function to use in useEffect
+  const validate = useCallback(
+    (data: State, checkTouched: boolean = true): IErrorState<State> => {
+      const newErrors = generateErrorState(defaultState);
 
-    const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
+      for (const path of statePaths) {
+        const options = get(stateOptionsRef.current, path);
 
-    setState((ps: State) => {
-      const newState = { ...ps };
-      const cf = get(stateOptions, name)?.format;
-      const finalValue = cf ? cf(eventValue) : eventValue;
-      set(newState, name, finalValue);
-      return newState;
-    });
-  };
+        if (options?.disabled) continue;
+        if (checkTouched && !get(touched, path)) continue;
 
-  const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
-    const newErrors = generateErrorState(defaultState);
+        const value = get(data, path);
 
-    for (const path of statePaths) {
-      const options = get(stateOptions, path);
+        if (options?.required && !value) {
+          set(newErrors, path, config?.requiredFieldErrorMessage ?? "Field is required");
+          continue;
+        }
 
-      if (options?.disabled) continue;
-      if (!get(touched, path) && checkTouched) continue;
+        const checkFunc = options?.validate as ((v: any, all: State) => string | true) | undefined;
 
-      const value = get(data, path);
-
-      if (options?.required && !value) {
-        set(newErrors, path, config?.requiredFieldErrorMessage ?? "Field is required");
-        continue;
+        if (checkFunc) {
+          const res = checkFunc(value, data);
+          set(newErrors, path, res === true ? undefined : res);
+        }
       }
+      return newErrors;
+    },
+    [defaultState, statePaths, touched, config],
+  );
 
-      const checkFunc = options?.validate as ((v: any, all: State) => string | true) | undefined;
+  // Memoize handleChange to avoid recreation
+  const handleChange = useCallback(
+    (name: DotPath<State>, type: "boolean" | "other") => (event: any) => {
+      setTouched((ps) => {
+        const newTouched = { ...ps };
+        set(newTouched, name, true);
+        return newTouched;
+      });
 
-      if (checkFunc) {
-        const res = checkFunc(value, data);
-        set(newErrors, path, res === true ? undefined : res);
-      }
-    }
-    return newErrors;
-  };
+      const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
+
+      setState((ps: State) => {
+        const newState = { ...ps };
+        const cf = get(stateOptionsRef.current, name)?.format;
+        const finalValue = cf ? cf(eventValue) : eventValue;
+        set(newState, name, finalValue);
+        return newState;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     if (hasForceValidatedRef.current) setErrors(validate(state));
-  }, [state]);
+  }, [state, validate]);
 
-  const register = <Path extends DotPath<State>>(
-    name: Path,
-    options: IOptions<any, State> = {},
-  ): Register<any, State> => {
-    // Persist field settings
-    set(stateOptions, name, {
-      required: definedOr(options.required, true),
-      validate: options.validate,
-      format: options.format,
-      disabled: options.disabled,
-    });
+  const register = useCallback(
+    <Path extends DotPath<State>>(name: Path, options: IOptions<any, State> = {}): Register<any, State> => {
+      // Persist field settings
+      set(stateOptionsRef.current, name, {
+        required: definedOr(options.required, true),
+        validate: options.validate,
+        format: options.format,
+        disabled: options.disabled,
+      });
 
-    const base = get(defaultState, name);
-    const current = get(state, name);
+      const base = get(defaultState, name);
+      const current = get(state, name);
+      const fieldError = get(errors, name);
+      const hasError = Boolean(fieldError);
+      const helperText = options.helperText || fieldError;
 
-    if (typeof base === "boolean") {
+      if (typeof base === "boolean") {
+        return {
+          name,
+          onChange: handleChange(name, "boolean"),
+          error: hasError,
+          disabled: options.disabled || false,
+          helperText,
+          checked: definedOr(current, base) as boolean,
+        } as unknown as Register<any, State>;
+      }
+
       return {
         name,
-        onChange: handleChange(name, "boolean"),
-        error: get(errors, name) ? true : undefined,
+        onChange: handleChange(name, "other"),
+        error: hasError,
         disabled: options.disabled || false,
-        helperText: options.helperText || get(errors, name),
-        checked: definedOr(current, base) as boolean,
+        helperText,
+        value: definedOr(current, base),
       } as unknown as Register<any, State>;
-    }
+    },
+    [defaultState, state, errors, handleChange],
+  );
 
-    return {
-      name,
-      onChange: handleChange(name, "other"),
-      error: get(errors, name) ? true : undefined,
-      disabled: options.disabled || false,
-      helperText: options.helperText || get(errors, name),
-      value: definedOr(current, base),
-    } as unknown as Register<any, State>;
-  };
-
-  const forceValidate = (): boolean => {
+  const forceValidate = useCallback((): boolean => {
     hasForceValidatedRef.current = true;
     setTouched(generateTouchedState(defaultState, true));
     const res = validate(state, false);
     setErrors(res);
     return checkValid(res);
-  };
+  }, [defaultState, state, validate]);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     hasForceValidatedRef.current = false;
     setState(defaultState);
     setErrors(generateErrorState(defaultState));
     setTouched(generateTouchedState(defaultState));
-  };
+  }, [defaultState]);
 
   return {
     state,

@@ -23,7 +23,7 @@
         "noConsole": "error"
       },
       "correctness": {
-        "useExhaustiveDependencies": "off"
+        "useExhaustiveDependencies": "warn"
       },
       "recommended": true,
       "style": {

@@ -34,7 +34,7 @@ const App: FC = () => {
   const { state, register, forceValidate, clear, setState } = useMuiForm<State>({
     defaultValues: {
       email: "",
-      role: "",
+      role: "root",
       racoon: false,
       birth: dayjs(),
       person: {
