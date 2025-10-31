@@ -9,6 +9,8 @@ const config = {
   images: {
     unoptimized: true,
   },
+  basePath: "/useMuiForm",
+  assetPrefix: "/useMuiForm/",
 };
 
 export default withMDX(config);
