@@ -14,6 +14,18 @@
   },
   "author": "mixelburg",
   "license": "ISC",
+  "keywords": [
+    "react",
+    "mui",
+    "material-ui",
+    "form",
+    "forms",
+    "hook",
+    "validation",
+    "react-hook",
+    "form-builder",
+    "typescript"
+  ],
   "files": [
     "dist"
   ],

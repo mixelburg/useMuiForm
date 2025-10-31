@@ -7,12 +7,6 @@ A lightweight custom React hook for **form management** with first-class support
 
 ---
 
-## ✨ Why?
-
-This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form).  
-It follows similar API patterns and design decisions, but is **purpose-built for MUI**.
----
-
 ## 📦 Installation
 
 ```bash
@@ -27,4 +21,9 @@ bun add usemuiform
 
 ---
 
+
+### ✨ Why?
+
+This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form).  
+It follows similar API patterns and design decisions, but is **purpose-built for MUI**.
 
