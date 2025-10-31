@@ -10,11 +10,12 @@
   },
   "dependencies": {
     "fumadocs-core": "^14.0.0",
-    "fumadocs-ui": "^14.0.0",
     "fumadocs-mdx": "^10.0.0",
+    "fumadocs-ui": "^14.0.0",
     "next": "^15.0.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "usemuiform": "^4.2.5"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
