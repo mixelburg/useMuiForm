@@ -1,10 +1,13 @@
+---
+title: Release Notes v4.0.0
+description: What's new in useMuiForm v4.0.0
+---
+
 # Release Notes - v4.0.0
 
 ## 🎉 Major Release - Configuration System & Lazy Input Improvements
 
 We're excited to announce **v4.0.0** of useMuiForm, featuring a comprehensive configuration system, improved lazy input validation, and better developer experience.
-
----
 
 ## ✨ New Features
 
@@ -12,7 +15,8 @@ We're excited to announce **v4.0.0** of useMuiForm, featuring a comprehensive co
 
 You can now configure useMuiForm globally or per-form instance with deep merge support!
 
-#### **UseMuiFormConfigProvider**
+#### UseMuiFormConfigProvider
+
 Wrap your app with the new configuration provider to set global defaults:
 
 ```tsx
@@ -29,7 +33,8 @@ import { UseMuiFormConfigProvider } from 'usemuiform'
 </UseMuiFormConfigProvider>
 ```
 
-#### **Per-Form Configuration**
+#### Per-Form Configuration
+
 Override context configuration at the hook level:
 
 ```tsx
@@ -45,16 +50,16 @@ const form = useMuiForm({
 })
 ```
 
-#### **Configuration Priority Chain**
+#### Configuration Priority Chain
+
 Configurations are deep-merged in the following order (lowest to highest priority):
+
 1. **Default config** (hardcoded: `required: true`, `lazy: false`)
 2. **Context config** (from `UseMuiFormConfigProvider`)
 3. **Hook config** (passed to `useMuiForm`)
 4. **Field config** (passed to `register()`)
 
 This means you can set global defaults and override them where needed!
-
----
 
 ### 🎯 Default Options System
 
@@ -79,13 +84,12 @@ const form = useMuiForm({
 <TextField {...register('email', { required: true, lazy: false })} />
 ```
 
----
-
 ### ⚡ Improved Lazy Input Validation
 
 **Breaking Change**: Lazy inputs now validate immediately on blur, regardless of whether `forceValidate()` has been called.
 
 #### Before v4.0.0:
+
 ```tsx
 // Lazy inputs only validated after forceValidate() was called
 <TextField {...register('email', { lazy: true, validate: emailValidator })} />
@@ -93,6 +97,7 @@ const form = useMuiForm({
 ```
 
 #### After v4.0.0:
+
 ```tsx
 // Lazy inputs validate on blur automatically
 <TextField {...register('email', { lazy: true, validate: emailValidator })} />
@@ -101,33 +106,33 @@ const form = useMuiForm({
 
 This provides better UX by giving immediate feedback to users without sacrificing the performance benefits of uncontrolled inputs.
 
----
-
 ## 🔨 Internal Improvements
 
 ### Extracted Validation Logic
+
 - Created reusable `validateField()` function
 - Eliminates code duplication between `validate()` and `handleBlur()`
 - Ensures consistent validation behavior across the codebase
 - Easier to maintain and test
 
 ### Deep Merge Support
+
 - Added `deepmerge` dependency for sophisticated config merging
 - Prevents config overwrites, allows selective overrides
 - More flexible and intuitive configuration experience
 
----
-
 ## 📚 Updated API
 
-### `useMuiForm(options?)`
+### useMuiForm(options?)
 
 #### Parameters
-- **`options`** (optional): 
+
+- **`options`** (optional):
   - `defaultValues?: State` - Initial form values
   - **`config?: UseMuiFormConfig`** - ⭐ **NEW**: Per-form configuration
 
-#### `UseMuiFormConfig` Interface
+#### UseMuiFormConfig Interface
+
 ```typescript
 interface UseMuiFormConfig {
   requiredFieldErrorMessage?: string
@@ -138,7 +143,7 @@ interface UseMuiFormConfig {
 }
 ```
 
-### `register(name, options?)`
+### register(name, options?)
 
 Field-level options now inherit from config defaults:
 
@@ -153,23 +158,22 @@ register(name, {
 })
 ```
 
----
-
 ## 📦 New Dependencies
 
 - **`deepmerge`** - For intelligent configuration merging
 
----
-
 ## 🔄 Migration Guide
 
 ### For Most Users
+
 No breaking changes if you don't use lazy inputs. Upgrade safely! 🎉
 
 ### If You Use Lazy Inputs
+
 Lazy inputs now validate on blur. This is generally desirable, but if you need the old behavior:
 
 **Option 1**: Remove `lazy` flag and use controlled inputs
+
 ```tsx
 // Before
 <TextField {...register('email', { lazy: true })} />
@@ -179,13 +183,18 @@ Lazy inputs now validate on blur. This is generally desirable, but if you need t
 ```
 
 **Option 2**: Handle validation state manually if needed
+
 ```tsx
 // You still have full control over when to show errors
 const { errors, touched } = useMuiForm(...)
 // Custom logic here
 ```
 
-**Upgrade**: `npm install usemuiform@4.0.0`
+## Upgrade
+
+```bash
+npm install usemuiform@4.0.0
+```
 
 Happy form building! 🚀
 

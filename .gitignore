@@ -50,5 +50,3 @@ dist
 
 package-lock.json
 
-# TypeDoc generated documentation
-docs

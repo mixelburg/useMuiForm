@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
   "files": {
-    "includes": ["**", "!docs"]
+    "includes": ["**", "!docs", "!**/node_modules", "!**/.next"]
   },
   "vcs": {
     "enabled": false,
@@ -23,7 +23,8 @@
     "rules": {
       "suspicious": {
         "noExplicitAny": "off",
-        "noConsole": "error"
+        "noConsole": "error",
+        "noUnknownAtRules": "off"
       },
       "correctness": {
         "useExhaustiveDependencies": "warn"

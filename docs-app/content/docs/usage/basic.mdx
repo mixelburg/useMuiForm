@@ -1,0 +1,170 @@
+---
+title: Basic Usage
+description: Learn the basics of using useMuiForm
+---
+
+# Basic Usage
+
+The `useMuiForm` hook provides a simple yet powerful API for managing form state in React applications with Material-UI components.
+
+## Creating a Form
+
+First, define your form state type and initialize the hook:
+
+```tsx
+import { useMuiForm } from 'usemuiform'
+
+type FormState = {
+  email: string
+  role: 'root' | 'admin' | 'developer' | 'user' | 'guest' | ''
+  isActive: boolean
+}
+
+const { state, register, forceValidate, clear } = useMuiForm<FormState>({
+  defaultValues: { email: '', role: '', isActive: false }
+})
+```
+
+## TextField Component
+
+Use the `register` function to connect Material-UI TextField components:
+
+```tsx
+<TextField
+  label="Email"
+  type="email"
+  variant="outlined"
+  {...register('email', { required: true })}
+  fullWidth
+/>
+```
+
+## Select Component
+
+For select inputs, combine TextField with MenuItem:
+
+```tsx
+<TextField
+  select
+  label="Role"
+  variant="outlined"
+  {...register('role')}
+  fullWidth
+>
+  {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
+    <MenuItem key={role} value={role}>
+      {role}
+    </MenuItem>
+  ))}
+</TextField>
+```
+
+## Checkbox Component
+
+For checkboxes, use FormControlLabel with Checkbox:
+
+```tsx
+import { FormControlLabel, Checkbox } from '@mui/material'
+
+<FormControlLabel
+  label="Is Active"
+  control={<Checkbox {...register('isActive')} />}
+/>
+```
+
+## Accessing Form State
+
+The current form state is available through the `state` object:
+
+```tsx
+console.log(state.email) // Current email value
+console.log(state.role)  // Current role value
+```
+
+## Submitting the Form
+
+Use `forceValidate()` to trigger validation on all fields:
+
+```tsx
+const handleSubmit = () => {
+  if (forceValidate()) {
+    // Form is valid, proceed with submission
+    console.log('Submitting:', state)
+
+    // Optionally clear the form
+    clear()
+  }
+}
+
+<Button variant="contained" onClick={handleSubmit}>
+  SUBMIT
+</Button>
+```
+
+## Complete Example
+
+```tsx
+import { useMuiForm } from 'usemuiform'
+import { TextField, Button, MenuItem, FormControlLabel, Checkbox } from '@mui/material'
+
+type FormState = {
+  email: string
+  role: 'root' | 'admin' | 'developer' | 'user' | 'guest' | ''
+  isActive: boolean
+}
+
+export default function MyForm() {
+  const { state, register, forceValidate, clear } = useMuiForm<FormState>({
+    defaultValues: { email: '', role: '', isActive: false }
+  })
+
+  const submit = () => {
+    if (forceValidate()) {
+      console.log('Form data:', state)
+      clear()
+    }
+  }
+
+  return (
+    <div>
+      <TextField
+        label="Email"
+        type="email"
+        variant="outlined"
+        {...register('email', { required: true })}
+        fullWidth
+      />
+
+      <TextField
+        select
+        label="Role"
+        variant="outlined"
+        {...register('role')}
+        fullWidth
+      >
+        {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
+          <MenuItem key={role} value={role}>
+            {role}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <FormControlLabel
+        label="Is Active"
+        control={<Checkbox {...register('isActive')} />}
+      />
+
+      <Button variant="contained" onClick={submit}>
+        SUBMIT
+      </Button>
+    </div>
+  )
+}
+```
+
+## Next Steps
+
+- Learn about [Validation](/docs/usage/validation)
+- Explore [Nested Fields](/docs/usage/nested-fields)
+- Configure [Lazy Inputs](/docs/usage/lazy-inputs)
+

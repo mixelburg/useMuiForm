@@ -8,8 +8,9 @@
     "dev": "rsbuild dev",
     "format": "biome check --write --unsafe",
     "prepare": "husky",
-    "docs": "typedoc",
-    "docs:watch": "typedoc --watch"
+    "docs:dev": "cd docs-app && npm run dev",
+    "docs:build": "cd docs-app && npm run build",
+    "docs:install": "cd docs-app && npm install"
   },
   "author": "mixelburg",
   "license": "ISC",
@@ -37,8 +38,6 @@
     "react-dom": "^19.1.1",
     "react-json-pretty": "^2.2.0",
     "tslib": "^2.8.1",
-    "typedoc": "^0.28.14",
-    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.7"
   },

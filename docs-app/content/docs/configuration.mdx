@@ -1,0 +1,256 @@
+---
+title: Configuration
+description: Configure useMuiForm globally or per-form
+---
+
+# Configuration
+
+useMuiForm v4.0.0+ includes a comprehensive configuration system that allows you to set defaults globally using a context provider or per-form instance.
+
+## Configuration Options
+
+The configuration object supports the following options:
+
+```tsx
+interface UseMuiFormConfig {
+  /** Custom error message for required fields */
+  requiredFieldErrorMessage?: string
+
+  /** Default options for all fields */
+  defaultOpts?: {
+    /** Whether fields are required by default */
+    required?: boolean
+    /** Whether fields use lazy (uncontrolled) mode by default */
+    lazy?: boolean
+  }
+}
+```
+
+## Global Configuration
+
+Use `UseMuiFormConfigProvider` to set defaults for all forms in your app:
+
+```tsx
+import { UseMuiFormConfigProvider } from 'usemuiform'
+
+function App() {
+  return (
+    <UseMuiFormConfigProvider config={{
+      requiredFieldErrorMessage: 'This field is required!',
+      defaultOpts: {
+        required: false,  // All fields optional by default
+        lazy: true        // All fields use lazy mode by default
+      }
+    }}>
+      <YourApp />
+    </UseMuiFormConfigProvider>
+  )
+}
+```
+
+## Per-Form Configuration
+
+Override global configuration at the hook level:
+
+```tsx
+const form = useMuiForm({
+  defaultValues: { email: '', name: '' },
+  config: {
+    requiredFieldErrorMessage: 'Please fill this field',
+    defaultOpts: {
+      required: true,
+      lazy: false
+    }
+  }
+})
+```
+
+## Configuration Priority
+
+Configurations are deep-merged in the following order (lowest to highest priority):
+
+1. **Default config** (hardcoded: `required: true`, `lazy: false`)
+2. **Context config** (from `UseMuiFormConfigProvider`)
+3. **Hook config** (from `useMuiForm` options)
+4. **Field config** (from individual `register` calls)
+
+```tsx
+// 1. Default: required: true, lazy: false
+
+// 2. Context overrides
+<UseMuiFormConfigProvider config={{
+  defaultOpts: { required: false }
+}}>
+
+  {/* 3. Hook overrides context */}
+  const form = useMuiForm({
+    config: { defaultOpts: { lazy: true } }
+  })
+  // Result: required: false (from context), lazy: true (from hook)
+
+  {/* 4. Field overrides everything */}
+  <TextField
+    {...register('email', {
+      required: true,  // Overrides context
+      lazy: false      // Overrides hook
+    })}
+  />
+</UseMuiFormConfigProvider>
+```
+
+## Custom Required Message
+
+Customize the error message shown for required fields:
+
+```tsx
+// Global
+<UseMuiFormConfigProvider config={{
+  requiredFieldErrorMessage: 'This field cannot be empty'
+}}>
+  <App />
+</UseMuiFormConfigProvider>
+
+// Per-form
+const form = useMuiForm({
+  defaultValues: { email: '' },
+  config: {
+    requiredFieldErrorMessage: 'Required'
+  }
+})
+```
+
+## Default Field Behavior
+
+### All Fields Optional
+
+Make all fields optional by default, then opt-in to required:
+
+```tsx
+const form = useMuiForm<FormState>({
+  defaultValues: { email: '', name: '', age: 0 },
+  config: {
+    defaultOpts: {
+      required: false  // All fields optional by default
+    }
+  }
+})
+
+// These are optional
+<TextField {...register('name')} />
+<TextField {...register('age')} />
+
+// This one is required
+<TextField {...register('email', { required: true })} />
+```
+
+### All Fields Lazy
+
+Enable lazy mode for all fields by default:
+
+```tsx
+const form = useMuiForm<FormState>({
+  defaultValues: { email: '', bio: '' },
+  config: {
+    defaultOpts: {
+      lazy: true  // All fields use lazy mode by default
+    }
+  }
+})
+
+// These are lazy
+<TextField {...register('email')} />
+<TextField {...register('bio')} />
+
+// This one is controlled
+<TextField {...register('search', { lazy: false })} />
+```
+
+## Complete Example
+
+```tsx
+import {
+  useMuiForm,
+  UseMuiFormConfigProvider,
+  type UseMuiFormConfig
+} from 'usemuiform'
+import { TextField, Button } from '@mui/material'
+
+// Global config
+const globalConfig: UseMuiFormConfig = {
+  requiredFieldErrorMessage: 'Please complete this field',
+  defaultOpts: {
+    required: false,
+    lazy: true
+  }
+}
+
+export function App() {
+  return (
+    <UseMuiFormConfigProvider config={globalConfig}>
+      <MyForm />
+    </UseMuiFormConfigProvider>
+  )
+}
+
+type FormState = {
+  email: string
+  name: string
+  bio: string
+}
+
+function MyForm() {
+  // This form inherits global config but overrides lazy setting
+  const { register, forceValidate } = useMuiForm<FormState>({
+    defaultValues: { email: '', name: '', bio: '' },
+    config: {
+      defaultOpts: {
+        lazy: false  // Override global lazy: true
+      }
+      // Inherits requiredFieldErrorMessage from global
+      // Inherits required: false from global
+    }
+  })
+
+  const handleSubmit = () => {
+    if (forceValidate()) {
+      console.log('Valid!')
+    }
+  }
+
+  return (
+    <div>
+      {/* Optional (from config), controlled (from config override) */}
+      <TextField {...register('name')} />
+
+      {/* Required (field override), controlled (from config) */}
+      <TextField {...register('email', { required: true })} />
+
+      {/* Optional (from config), lazy (field override) */}
+      <TextField {...register('bio', { lazy: true })} />
+
+      <Button onClick={handleSubmit}>Submit</Button>
+    </div>
+  )
+}
+```
+
+## TypeScript Support
+
+Full TypeScript support for configuration:
+
+```tsx
+import type { UseMuiFormConfig } from 'usemuiform'
+
+const config: UseMuiFormConfig = {
+  requiredFieldErrorMessage: 'Required',
+  defaultOpts: {
+    required: true,
+    lazy: false
+  }
+}
+
+// Type-safe usage
+<UseMuiFormConfigProvider config={config}>
+  <App />
+</UseMuiFormConfigProvider>
+```

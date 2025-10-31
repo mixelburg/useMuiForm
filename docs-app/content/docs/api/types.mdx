@@ -1,0 +1,348 @@
+---
+title: Type Definitions
+description: TypeScript type definitions for useMuiForm
+---
+
+# Type Definitions
+
+TypeScript type definitions exported by useMuiForm.
+
+## Core Types
+
+### ValidateFunc
+
+Type for validation functions.
+
+```tsx
+type ValidateFunc<V, S> = (value: V, state: S) => string | true
+```
+
+#### Parameters
+
+- `value` - The current value of the field being validated
+- `state` - The current state of the entire form
+
+#### Returns
+
+- `true` if the field is valid
+- `string` error message if the field is invalid
+
+#### Example
+
+```tsx
+import type { ValidateFunc } from 'usemuiform'
+
+type FormState = { email: string; age: number }
+
+const emailValidator: ValidateFunc<string, FormState> = (value, state) => {
+  if (value.length < 5) return 'Email must be at least 5 characters'
+  if (!value.includes('@')) return 'Email must contain @'
+  if (state.age < 13 && value.includes('business')) {
+    return 'Business emails not allowed for users under 13'
+  }
+  return true
+}
+```
+
+### FormatFunc
+
+Type for value formatting functions.
+
+```tsx
+type FormatFunc<V> = (value: V) => V
+```
+
+#### Parameters
+
+- `value` - The value to format
+
+#### Returns
+
+The formatted value of the same type
+
+#### Example
+
+```tsx
+import type { FormatFunc } from 'usemuiform'
+
+const uppercaseFormatter: FormatFunc<string> = (value) => {
+  return value.toUpperCase()
+}
+
+const phoneFormatter: FormatFunc<string> = (value) => {
+  // Remove non-digits
+  const digits = value.replace(/\D/g, '')
+  // Format as (XXX) XXX-XXXX
+  return digits.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
+}
+
+<TextField
+  {...register('phone', { format: phoneFormatter })}
+/>
+```
+
+### IOptions
+
+Options for configuring individual form fields.
+
+```tsx
+interface IOptions<V, S> {
+  /** Whether the field is disabled */
+  disabled?: boolean
+
+  /** Custom validation function */
+  validate?: ValidateFunc<V, S>
+
+  /** Helper text to display below the field */
+  helperText?: string
+
+  /** Whether the field is required */
+  required?: boolean
+
+  /** Function to format/transform the value on change */
+  format?: FormatFunc<V>
+
+  /** Use lazy (uncontrolled) mode for this field */
+  lazy?: boolean
+}
+```
+
+#### Example
+
+```tsx
+import type { IOptions } from 'usemuiform'
+
+type FormState = { email: string }
+
+const emailOptions: IOptions<string, FormState> = {
+  required: true,
+  validate: (value) => value.includes('@') || 'Invalid email',
+  helperText: 'Enter your email address',
+  lazy: false
+}
+
+<TextField {...register('email', emailOptions)} />
+```
+
+### UseMuiFormConfig
+
+Configuration for the form behavior.
+
+```tsx
+interface UseMuiFormConfig {
+  /** Custom error message for required fields */
+  requiredFieldErrorMessage?: string
+
+  /** Default options for all fields */
+  defaultOpts?: {
+    /** Whether fields are required by default */
+    required?: boolean
+    /** Whether fields use lazy (uncontrolled) mode by default */
+    lazy?: boolean
+  }
+}
+```
+
+#### Example
+
+```tsx
+import type { UseMuiFormConfig } from 'usemuiform'
+
+const config: UseMuiFormConfig = {
+  requiredFieldErrorMessage: 'This field is mandatory',
+  defaultOpts: {
+    required: false,
+    lazy: true
+  }
+}
+
+const form = useMuiForm({
+  defaultValues: { email: '' },
+  config
+})
+```
+
+### UseMuiFormOpts
+
+Options passed to the useMuiForm hook.
+
+```tsx
+type UseMuiFormOpts<State extends IState> = {
+  /** Initial values for the form fields */
+  defaultValues?: State
+
+  /** Configuration options for form behavior */
+  config?: UseMuiFormConfig
+}
+```
+
+#### Example
+
+```tsx
+import type { UseMuiFormOpts } from 'usemuiform'
+
+type FormState = { email: string; name: string }
+
+const formOpts: UseMuiFormOpts<FormState> = {
+  defaultValues: { email: '', name: '' },
+  config: {
+    requiredFieldErrorMessage: 'Required',
+    defaultOpts: { required: true }
+  }
+}
+
+const form = useMuiForm(formOpts)
+```
+
+### DotPath
+
+Utility type that generates type-safe dot-notation paths for nested objects.
+
+```tsx
+type DotPath<T> = // ... complex type definition
+```
+
+This type is automatically inferred and provides autocomplete for nested field paths.
+
+#### Example
+
+```tsx
+type FormState = {
+  user: {
+    name: string
+    email: string
+  }
+  address: {
+    street: string
+    city: string
+  }
+}
+
+// DotPath<FormState> resolves to:
+// 'user' | 'user.name' | 'user.email' | 'address' | 'address.street' | 'address.city'
+
+// TypeScript provides autocomplete for these paths:
+register('user.name')      // ✅ Valid
+register('user.email')     // ✅ Valid
+register('address.city')   // ✅ Valid
+register('user.age')       // ❌ Error: Property 'age' does not exist
+```
+
+## Helper Types
+
+### IState
+
+Base interface for form state objects.
+
+```tsx
+interface IState {
+  [key: string]: any
+}
+```
+
+All form state types must extend this interface.
+
+### IErrorState
+
+Type for the errors object, mapping field paths to error messages.
+
+```tsx
+type IErrorState<State> = {
+  [K in keyof State]: State[K] extends object
+    ? IErrorState<State[K]>
+    : string | undefined
+}
+```
+
+### ITouchedState
+
+Type for the touched state, mapping field paths to boolean values.
+
+```tsx
+type ITouchedState<State> = {
+  [K in keyof State]: State[K] extends object
+    ? ITouchedState<State[K]>
+    : boolean
+}
+```
+
+## Usage Examples
+
+### Complete Type-Safe Form
+
+```tsx
+import {
+  useMuiForm,
+  type ValidateFunc,
+  type FormatFunc,
+  type UseMuiFormConfig
+} from 'usemuiform'
+
+// Define your form state
+type FormState = {
+  user: {
+    firstName: string
+    lastName: string
+    email: string
+  }
+  settings: {
+    newsletter: boolean
+    notifications: boolean
+  }
+}
+
+// Type-safe validators
+const emailValidator: ValidateFunc<string, FormState> = (value, state) => {
+  if (!value.includes('@')) return 'Invalid email'
+  return true
+}
+
+// Type-safe formatters
+const nameFormatter: FormatFunc<string> = (value) => {
+  return value.trim().replace(/\s+/g, ' ')
+}
+
+// Type-safe config
+const config: UseMuiFormConfig = {
+  requiredFieldErrorMessage: 'This field is required',
+  defaultOpts: { required: true, lazy: false }
+}
+
+// Create form with full type safety
+export default function MyForm() {
+  const { state, errors, register, forceValidate } = useMuiForm<FormState>({
+    defaultValues: {
+      user: { firstName: '', lastName: '', email: '' },
+      settings: { newsletter: false, notifications: false }
+    },
+    config
+  })
+
+  // TypeScript knows about all nested paths
+  return (
+    <div>
+      <TextField
+        {...register('user.firstName', {
+          required: true,
+          format: nameFormatter
+        })}
+      />
+      <TextField
+        {...register('user.email', {
+          required: true,
+          validate: emailValidator
+        })}
+      />
+      <Checkbox
+        {...register('settings.newsletter')}
+      />
+    </div>
+  )
+}
+```
+
+## See Also
+
+- [useMuiForm Hook](/docs/api/use-mui-form)
+- [UseMuiFormConfigProvider](/docs/api/config-provider)
+
