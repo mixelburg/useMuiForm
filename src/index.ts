@@ -1,11 +1,11 @@
-import { atom, type PrimitiveAtom, useAtom } from "jotai";
-import { get, set } from "lodash";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig } from "./config";
-import type { DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register } from "./types";
-import { checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState } from "./utils";
+import {atom, type PrimitiveAtom, useAtom} from "jotai";
+import {get, set} from "lodash";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig} from "./config";
+import type {DotPath, IErrorState, IOptions, IState, IStateOptions, ITouchedState, Register} from "./types";
+import {checkValid, collectPaths, definedOr, generateErrorState, generateTouchedState} from "./utils";
 
-export { UseMuiFormConfigProvider, type UseMuiFormConfig };
+export {UseMuiFormConfigProvider, type UseMuiFormConfig};
 
 type PropsWithAtom<State extends IState> = { atom: PrimitiveAtom<State> };
 type PropsWithDefaults<State extends IState> = { defaultValues: State };
@@ -45,6 +45,8 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const stateOptionsRef = useRef<IStateOptions<State>>({});
   const stateOptions = stateOptionsRef.current;
 
+  const hasForceValidatedRef = useRef<boolean>(false);
+
   const [errors, setErrors] = useState<IErrorState<State>>(generateErrorState(defaultState));
   const [touched, setTouched] = useState<ITouchedState<State>>(generateTouchedState(defaultState));
 
@@ -53,7 +55,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
 
   const handleChange = (name: DotPath<State>, type: "boolean" | "other") => (event: any) => {
     setTouched((ps) => {
-      const newTouched = { ...ps };
+      const newTouched = {...ps};
       set(newTouched, name, true);
       return newTouched;
     });
@@ -61,7 +63,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
     const eventValue = event?.target ? (type === "boolean" ? event.target.checked : event.target.value) : event;
 
     setState((ps: State) => {
-      const newState = { ...ps };
+      const newState = {...ps};
       const pathKey = name as string;
       const cf = get(stateOptions, pathKey)?.format;
       const finalValue = cf ? cf(eventValue) : eventValue;
@@ -98,7 +100,9 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   };
 
   useEffect(() => {
-    setErrors(validate(state));
+    if (hasForceValidatedRef.current) {
+      setErrors(validate(state));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -141,6 +145,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   };
 
   const forceValidate = (): boolean => {
+    hasForceValidatedRef.current = true;
     setTouched(generateTouchedState(defaultState, true));
     const res = validate(state, false);
     setErrors(res);
@@ -148,6 +153,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   };
 
   const clear = () => {
+    hasForceValidatedRef.current = false;
     setState(defaultState);
     setErrors(generateErrorState(defaultState));
     setTouched(generateTouchedState(defaultState));
