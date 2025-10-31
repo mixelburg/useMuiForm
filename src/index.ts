@@ -43,9 +43,9 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
 
     const [errors, setErrors] = useState<any>(generateErrorState(defaultState))
     const [touched, setTouched] = useState<any>(generateTouchedState(defaultState))
-    const isAnyTouched = Object.values(touched).some(v => !!v)
+    const [hasForceValidated, setHasForceValidated] = useState<boolean>(false)
 
-    const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState)
+
 
     const handleChange = <Key extends keyof State>(name: Key, type: 'boolean' | 'other') => (event: any) => {
         // update touched state to reflect user interaction
@@ -71,13 +71,16 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
         })
     }
 
-    const validate = (data: State, checkTouched: boolean = true): IErrorState<State> => {
+    const validate = (data: State, checkTouched: boolean = true, ignoreForceValidateFlag: boolean = false): IErrorState<State> => {
         const newErrors: Partial<IErrorState<State>> = {}
 
         for (const key in defaultState) {
 
             if (stateOptions[key]?.disabled) continue
             if (!touched[key] && checkTouched) continue
+
+            // Don't show errors until forceValidate has been called at least once
+            if (!hasForceValidated && !ignoreForceValidateFlag) continue
 
             // check if field is required
             if (stateOptions[key]?.required && !data[key]) {
@@ -132,8 +135,9 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
     }
 
     const forceValidate = (): boolean => {
+        setHasForceValidated(true)
         setTouched(generateTouchedState(defaultState, true))
-        const res = validate(state, false)
+        const res = validate(state, false, true)
         setErrors(res)
 
         return checkValid(res)
@@ -143,17 +147,22 @@ const useMuiForm = <State extends IState = IState>(atomProvider?: (defaultState:
         setState(defaultState)
         setErrors(generateErrorState(defaultState))
         setTouched(generateTouchedState(defaultState))
+        setHasForceValidated(false)
     }
+
+    const isAnyTouched = Object.values(touched).some(v => !!v)
+    const isChanged = JSON.stringify(state) !== JSON.stringify(defaultState)
 
     return {
         state,
         setState,
         errors,
         setErrors,
+        touched,
+        setTouched,
         register,
         forceValidate,
         clear,
-        touched,
         isAnyTouched,
         isChanged
     }
