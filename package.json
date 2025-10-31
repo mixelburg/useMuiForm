@@ -11,9 +11,6 @@
   },
   "author": "mixelburg",
   "license": "ISC",
-  "peerDependencies": {
-    "jotai": "*"
-  },
   "files": [
     "dist"
   ],

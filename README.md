@@ -100,21 +100,6 @@ const App: FC = () => {
 
 ---
 
-## ⚡ Advanced Usage
-
-You can provide a custom **Jotai atom** as state storage:
-
-```tsx
-import { atom } from 'jotai'
-import { atomWithHash } from 'jotai-location'
-import { atomWithStorage } from 'jotai/utils'
-
-const {} = useMuiForm<State>({ atom: atom<State>({ email: '', role: '', racoon: false }) })
-const {} = useMuiForm<State>({ atom: atomWithHash<State>('state', { email: '', role: '', racoon: false }) })
-const {} = useMuiForm<State>({ atom: atomWithStorage<State>('state', { email: '', role: '', racoon: false }) })
-```
-
----
 
 ## 📚 API
 
@@ -123,9 +108,7 @@ const {} = useMuiForm<State>({ atom: atomWithStorage<State>('state', { email: ''
 Custom hook that provides form management utilities.
 
 #### Parameters
-- **`options`** (optional): one of
-  - `{ defaultValues: State }`
-  - `{ atom: PrimitiveAtom<State> }`
+- **`options`** (optional): `{ defaultValues?: State }`
 
 #### Returns
 - **`state`** – Current form state
@@ -166,7 +149,6 @@ Registers a form field.
 ## 📦 Dependencies
 
 - `react`
-- `jotai`
 
 ---
 

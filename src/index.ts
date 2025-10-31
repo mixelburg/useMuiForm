@@ -1,4 +1,3 @@
-import {atom, type PrimitiveAtom, useAtom} from "jotai";
 import {get, set} from "lodash";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {type UseMuiFormConfig, UseMuiFormConfigProvider, useUseMuiFormConfig} from "./config";
@@ -7,40 +6,21 @@ import {checkValid, collectPaths, definedOr, generateErrorState, generateTouched
 
 export {UseMuiFormConfigProvider, type UseMuiFormConfig};
 
-type PropsWithAtom<State extends IState> = { atom: PrimitiveAtom<State> };
-type PropsWithDefaults<State extends IState> = { defaultValues: State };
-type UseMuiFormOpts<State extends IState> = PropsWithAtom<State> | PropsWithDefaults<State>;
-
-const isPropsWithAtom = <State extends IState>(opts: UseMuiFormOpts<State>): opts is PropsWithAtom<State> =>
-  "atom" in opts && !!opts.atom;
-
-const isPropsWithDefaults = <State extends IState>(opts: UseMuiFormOpts<State>): opts is PropsWithDefaults<State> =>
-  "defaultValues" in opts && !!opts.defaultValues;
+export type UseMuiFormOpts<State extends IState> = { defaultValues?: State };
 
 export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   const config = useUseMuiFormConfig();
-  const hasAtom = opts ? isPropsWithAtom(opts) : false;
-  const hasDefaults = opts ? isPropsWithDefaults(opts) : false;
-  if (opts && !hasAtom && !hasDefaults) {
-    throw new Error("useMuiForm: provide either { atom } or { defaultValues }.");
-  }
 
-  const stateAtom: PrimitiveAtom<State> = useMemo(
-    () =>
-      hasAtom
-        ? (opts as PropsWithAtom<State>).atom
-        : atom<State>(hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : ({} as State)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Initialize default state from options or empty object
+  const {defaultState, statePaths} = useMemo(
+    () => {
+      const defaultState: State = opts?.defaultValues || ({} as State);
+      return {defaultState, statePaths: collectPaths(defaultState)};
+    },
     [],
   );
 
-  const [state, setState] = useAtom(stateAtom);
-
-  // Baseline used for clear(), error/touched shape, and isChanged comparison.
-  // If defaultValues were provided, use them; otherwise, capture the atom's initial state on first render.
-  const defaultState = (hasDefaults ? (opts as PropsWithDefaults<State>).defaultValues : state) as State;
-
-  const statePaths = collectPaths(defaultState);
+  const [state, setState] = useState<State>(defaultState);
 
   const stateOptionsRef = useRef<IStateOptions<State>>({});
   const stateOptions = stateOptionsRef.current;
@@ -100,10 +80,7 @@ export function useMuiForm<State extends IState>(opts?: UseMuiFormOpts<State>) {
   };
 
   useEffect(() => {
-    if (hasForceValidatedRef.current) {
-      setErrors(validate(state));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (hasForceValidatedRef.current) setErrors(validate(state));
   }, [state]);
 
   const register = <Path extends DotPath<State>>(
