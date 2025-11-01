@@ -1,11 +1,11 @@
 import { get } from "lodash";
+import React from "react";
 import { type FieldValues, type Path, type PathValue, type UseFormProps, useForm } from "react-hook-form";
 
 type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = {
   name: TName;
   onChange?: (event: any) => void;
   onBlur: (event: any) => void;
-  ref: (instance: any) => void;
   error: boolean;
   helperText: string;
   inputRef: (instance: any) => void;
@@ -24,6 +24,10 @@ type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFie
         checked?: never;
         defaultChecked?: never;
       });
+
+const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => {
+  return (v as React.ChangeEvent<HTMLInputElement>)?.target?.value !== undefined;
+};
 
 export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(options?: UseFormProps<TFieldValues>) {
   const methods = useForm<TFieldValues>(options);
@@ -53,19 +57,19 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     const isCheckbox = typeof currentValue === "boolean";
 
     // Wrap onChange to handle different event types
-    const wrappedOnChange = (event: any) => {
-      if (event?.target?.value !== undefined) {
-        event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+    const wrappedOnChange = (event: unknown) => {
+      if (isChangeEvent(event)) {
+        event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
         field.onChange(event);
       } else {
-        setValue(name, event);
+        setValue(name, event as PathValue<TFieldValues, Name>);
         trigger(name);
       }
     };
 
-    const wrappedOnBlur = (event: any) => {
+    const wrappedOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
       if (event?.target?.value !== undefined) {
-        event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+        event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
         field.onBlur(event);
       }
     };
