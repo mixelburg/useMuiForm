@@ -36,7 +36,7 @@ type DemoFormProps = {
 };
 
 const DemoForm: FC<DemoFormProps> = ({ mode }) => {
-  const { registerMui, handleSubmit, watch } = useMuiForm<State>({
+  const { registerMui, handleSubmit } = useMuiForm<State>({
     defaultValues: {
       roles: [],
       email: "",
@@ -51,9 +51,10 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     mode,
   });
 
+  const [state, setState] = useState<State>();
+
   const submit = async (data: State) => {
-    // biome-ignore lint/suspicious/noConsole: demo logging
-    console.log("data", data);
+    setState(data);
   };
 
   const birthProps = registerMui("birth", {
@@ -134,7 +135,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           "SUBMIT"
         </Button>
       </Stack>
-      <JSONPretty data={watch()} />
+      <JSONPretty data={state} />
     </Stack>
   );
 };

@@ -52,11 +52,6 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     // Check if this is a checkbox field (value is boolean)
     const isCheckbox = typeof currentValue === "boolean";
 
-    // Wrap ref to store it
-    const wrappedRef = (instance: any) => {
-      field.ref(instance);
-    };
-
     // Wrap onChange to handle different event types
     const wrappedOnChange = (event: any) => {
       if (event?.target?.value !== undefined) {
@@ -77,11 +72,11 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
 
     const baseReturn = {
       name,
-      ...(isControlled ? { onChange: wrappedOnChange } : {}),
+      onChange: wrappedOnChange,
       onBlur: wrappedOnBlur,
       error: !!err,
       helperText: (err?.message as string) || "",
-      inputRef: wrappedRef,
+      inputRef: field.ref,
     };
 
     if (isCheckbox) {
