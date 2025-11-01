@@ -1,28 +1,72 @@
 import {
   Button,
   Checkbox,
-  CircularProgress,
   FormControlLabel,
   FormGroup,
   FormHelperText,
   MenuItem,
   Paper,
+  Select,
   Stack,
   TextField,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimeField } from "@mui/x-date-pickers/DateTimeField";
 import dayjs from "dayjs";
-import { type FC, useState } from "react";
+import type { FC } from "react";
 import JSONPretty from "react-json-pretty";
-import { useMuiForm } from "@/src";
-import type { ValidateFunc } from "@/src/types";
 import "react-json-pretty/themes/monikai.css";
+import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { get } from "lodash";
+import { type FieldValues, type Path, type UseFormProps, useForm } from "react-hook-form";
 
+type RegisterMuiReturn = {
+  name: string;
+  onChange: (event: any) => void;
+  onBlur: (event: any) => void;
+  ref: (instance: any) => void;
+  value?: any;
+  checked?: boolean;
+  error: boolean;
+  helperText: string;
+  inputRef: (instance: any) => void;
+};
+
+export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(options?: UseFormProps<TFieldValues>) {
+  const methods = useForm<TFieldValues>(options);
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = methods;
+
+  function registerMui<Name extends Path<TFieldValues>>(
+    name: Name,
+    options?: Parameters<typeof register>[1],
+  ): RegisterMuiReturn {
+    const field = register(name, options);
+    const err = get(errors, name);
+    const value = watch(name);
+
+    // Check if this is a checkbox field (value is boolean)
+    const isCheckbox = typeof value === "boolean";
+
+    return {
+      ...field,
+      ...(isCheckbox ? { checked: value } : { value: value ?? "" }),
+      error: !!err,
+      helperText: (err?.message as string) || "",
+      inputRef: field.ref,
+    };
+  }
+
+  return { ...methods, registerMui };
+}
+
+type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
   email: string;
-  role: "root" | "admin" | "developer" | "user" | "guest" | "";
+  role: Role;
+  roles: Role[];
   racoon: boolean;
   birth: dayjs.Dayjs;
   person: {
@@ -32,64 +76,43 @@ type State = {
 };
 
 const App: FC = () => {
-  const { state, register, forceValidate, clear, setState } = useMuiForm<State>({
+  const { registerMui, handleSubmit, getValues, watch } = useMuiForm<State>({
     defaultValues: {
+      roles: [],
       email: "",
       role: "root",
-      racoon: false,
+      racoon: true,
       birth: dayjs(),
       person: {
-        name: "",
+        name: "ivan",
       },
       description: "",
     },
+    mode: "onChange",
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  const submit = async () => {
-    if (submitting) return;
-    if (forceValidate()) {
-      setSubmitting(true);
-      // wait 1 second
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSubmitting(false);
-    }
-  };
+  const submit = async (_data: State) => {};
 
-  const alterState = () => {
-    setState((ps) => ({
-      ...ps,
-      email: "have-changed@gmail.com",
-    }));
-  };
-
-  const emailValidator: ValidateFunc<State["email"], State> = (value) => {
+  const emailValidator = (value) => {
     if (value.length < 5) {
       return "Email must be at least 5 characters long";
     }
     if (!value.includes("@")) {
       return "Email must contain @";
     }
-    return true;
+    return;
   };
 
-  const birthProps = register("birth", {
+  const birthProps = registerMui("birth", {
     required: true,
-    validate: (value) => {
-      // get value of year 2000
-      const year2000 = dayjs().year(2000);
-      if (value.isBefore(year2000)) {
-        return "birth date must be after 2000";
-      }
+    validate: (_value) => {
+      // const year2000 = dayjs().year(2000);
+      // if (value.isBefore(year2000)) {
+      //   return "birth date must be after 2000";
+      // }
       return true;
     },
   });
-
-  const {
-    helperText: checkboxHelperText,
-    error: checkboxError,
-    ...checkBoxProps
-  } = register("racoon", { required: false });
 
   return (
     <Stack height="100%" alignItems="center" justifyContent="center" component={Paper}>
@@ -97,66 +120,56 @@ const App: FC = () => {
         <Stack maxHeight={500} spacing={2}>
           <h1>Hello World</h1>
 
-          <TextField label="name" variant="outlined" {...register("person.name")} />
+          <TextField label="name" variant="outlined" {...registerMui("person.name")} />
           <TextField
             label="email"
             type="email"
             variant="outlined"
-            {...register("email", {
-              required: true,
+            {...registerMui("email", {
               validate: emailValidator,
             })}
             fullWidth
           />
-          <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
+
+          <TextField label="description" variant="outlined" {...registerMui("description", {})} fullWidth />
+
+          <TextField select label="role" variant="outlined" {...registerMui("role")} fullWidth>
             {["root", "admin", "developer", "user", "guest"].map((role) => (
               <MenuItem key={role} value={role}>
                 {role}
               </MenuItem>
             ))}
           </TextField>
+
+          <Select multiple label="roles" variant="outlined" {...registerMui("roles")} fullWidth>
+            {["root", "admin", "developer", "user", "guest"].map((role) => (
+              <MenuItem key={role} value={role}>
+                {role}
+              </MenuItem>
+            ))}
+          </Select>
+
           <FormGroup>
-            <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkBoxProps} />} />
-            <FormHelperText error={checkboxError}>{checkboxHelperText}</FormHelperText>
+            {(() => {
+              const { helperText, error, ...checkboxProps } = registerMui("racoon");
+              return (
+                <>
+                  <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
+                  <FormHelperText error={error}>{helperText}</FormHelperText>
+                </>
+              );
+            })()}
           </FormGroup>
+
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimeField label="birth" {...birthProps} />
           </LocalizationProvider>
-          <TextField
-            label="description (lazy - updates on blur)"
-            variant="outlined"
-            {...register("description", {
-              required: true,
-              lazy: true,
-              validate: (value) => {
-                if (value.length < 10) {
-                  return "Description must be at least 10 characters long";
-                }
-                return true;
-              },
-            })}
-            fullWidth
-            multiline
-            minRows={3}
-          />
 
-          <Button variant="contained" color="warning" onClick={alterState}>
-            CHANGE STATE
-          </Button>
-          <Button variant="contained" color="secondary" onClick={clear}>
-            RESET
-          </Button>
-          <Button variant="contained" onClick={submit} disabled={submitting}>
-            {submitting ? (
-              <Stack sx={{ color: "black" }}>
-                <CircularProgress color="inherit" size={24} />{" "}
-              </Stack>
-            ) : (
-              "SUBMIT"
-            )}
+          <Button variant="contained" onClick={handleSubmit(submit)}>
+            "SUBMIT"
           </Button>
         </Stack>
-        <JSONPretty data={state} />
+        <JSONPretty data={watch()} />
       </Stack>
     </Stack>
   );
