@@ -52,14 +52,14 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     // Wrap onChange to handle different event types
     const wrappedOnChange = (event: any) => {
       if (!event?.target && event === null) return;
-      const eventValue = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
-      field.onChange({ target: { name, value: eventValue } });
+      event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+      field.onChange(event);
     };
 
     const wrappedOnBlur = (event: any) => {
       if (!event?.target && event === null) return;
-      const eventValue = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
-      field.onBlur({ target: { name, value: eventValue } });
+      event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+      field.onBlur(event);
     };
 
     const baseReturn = {
