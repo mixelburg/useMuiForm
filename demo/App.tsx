@@ -48,7 +48,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
       },
       description: "",
     },
-    mode: "onBlur",
+    mode,
   });
 
   const submit = async (data: State) => {
@@ -127,15 +127,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
         </FormGroup>
 
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateTimeField
-            label="birth"
-            {...birthProps}
-            slotProps={{
-              textField: {
-                inputRef: birthProps.ref,
-              },
-            }}
-          />
+          <DateTimeField label="birth" {...birthProps} />
         </LocalizationProvider>
 
         <Button variant="contained" onClick={handleSubmit(submit)}>
@@ -148,7 +140,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
 };
 
 const App: FC = () => {
-  const [mode, setMode] = useState<"onChange" | "onBlur" | "onSubmit" | "onTouched" | "all">("onBlur");
+  const [mode, setMode] = useState<DemoFormProps["mode"]>("onBlur");
 
   return (
     <Stack height="100%" alignItems="center" justifyContent="center" component={Paper} spacing={2} padding={2}>

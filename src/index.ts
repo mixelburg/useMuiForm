@@ -30,12 +30,15 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
   const {
     register,
     formState: { errors, defaultValues },
-    getValues,
     watch,
+    setValue,
+    trigger,
   } = methods;
 
   // Check if we're in controlled mode (onChange) or uncontrolled mode (onBlur, onSubmit, etc.)
   const isControlled = !options?.mode || options.mode === "onChange" || options.mode === "all";
+
+  // Store refs for all inputs to access their values in onBlur
 
   function registerMui<Name extends Path<TFieldValues>>(
     name: Name,
@@ -49,27 +52,36 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     // Check if this is a checkbox field (value is boolean)
     const isCheckbox = typeof currentValue === "boolean";
 
+    // Wrap ref to store it
+    const wrappedRef = (instance: any) => {
+      field.ref(instance);
+    };
+
     // Wrap onChange to handle different event types
     const wrappedOnChange = (event: any) => {
-      if (!event?.target && event === null) return;
-      event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
-      field.onChange(event);
+      if (event?.target?.value !== undefined) {
+        event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+        field.onChange(event);
+      } else {
+        setValue(name, event);
+        trigger(name);
+      }
     };
 
     const wrappedOnBlur = (event: any) => {
-      if (!event?.target && event === null) return;
-      event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
-      field.onBlur(event);
+      if (event?.target?.value !== undefined) {
+        event.target.value = event?.target ? (isCheckbox ? event.target.checked : event.target.value) : event;
+        field.onBlur(event);
+      }
     };
 
     const baseReturn = {
       name,
       ...(isControlled ? { onChange: wrappedOnChange } : {}),
       onBlur: wrappedOnBlur,
-      ref: field.ref,
       error: !!err,
       helperText: (err?.message as string) || "",
-      inputRef: field.ref,
+      inputRef: wrappedRef,
     };
 
     if (isCheckbox) {
