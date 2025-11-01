@@ -36,7 +36,7 @@ type DemoFormProps = {
 };
 
 const DemoForm: FC<DemoFormProps> = ({ mode }) => {
-  const { registerMui, handleSubmit } = useMuiForm<State>({
+  const { register, handleSubmit } = useMuiForm<State>({
     defaultValues: {
       roles: [],
       email: "",
@@ -57,7 +57,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     setState(data);
   };
 
-  const birthProps = registerMui("birth", {
+  const birthProps = register("birth", {
     required: true,
     validate: (_value) => {
       const year2000 = dayjs().year(2000);
@@ -75,7 +75,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
         <TextField
           label="name"
           variant="outlined"
-          {...registerMui("person.name", { required: true })}
+          {...register("person.name", { required: true })}
           defaultValue={"maks"}
         />
 
@@ -83,7 +83,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           label="email"
           type="email"
           variant="outlined"
-          {...registerMui("email", {
+          {...register("email", {
             validate: (value) => {
               if (value.length < 5) {
                 return "Email must be at least 5 characters long";
@@ -97,9 +97,9 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           fullWidth
         />
 
-        <TextField label="description" variant="outlined" {...registerMui("description", {})} fullWidth />
+        <TextField label="description" variant="outlined" {...register("description", {})} fullWidth />
 
-        <TextField select label="role" variant="outlined" {...registerMui("role")} fullWidth>
+        <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
           {["root", "admin", "developer", "user", "guest"].map((role) => (
             <MenuItem key={role} value={role}>
               {role}
@@ -107,7 +107,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           ))}
         </TextField>
 
-        <Select multiple label="roles" variant="outlined" {...registerMui("roles")} fullWidth>
+        <Select multiple label="roles" variant="outlined" {...register("roles")} fullWidth>
           {["root", "admin", "developer", "user", "guest"].map((role) => (
             <MenuItem key={role} value={role}>
               {role}
@@ -117,7 +117,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
 
         <FormGroup>
           {(() => {
-            const { helperText, error, ...checkboxProps } = registerMui("racoon");
+            const { helperText, error, ...checkboxProps } = register("racoon");
             return (
               <>
                 <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />

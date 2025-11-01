@@ -42,7 +42,7 @@ const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => 
 export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(options?: UseFormProps<TFieldValues>) {
   const methods = useForm<TFieldValues>(options);
   const {
-    register,
+    register: registerHtml,
     formState: { errors, defaultValues },
     watch,
     setValue,
@@ -54,11 +54,11 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
 
   // Store refs for all inputs to access their values in onBlur
 
-  function registerMui<Name extends Path<TFieldValues>>(
+  function register<Name extends Path<TFieldValues>>(
     name: Name,
-    regOptions?: Parameters<typeof register<Name>>[1],
+    regOptions?: Parameters<typeof registerHtml<Name>>[1],
   ): RegisterMuiReturn<TFieldValues, Name> {
-    const field = register(name, regOptions);
+    const field = registerHtml(name, regOptions);
     const err = get(errors, name);
     // Use watch for controlled mode to keep value in sync, getValues for uncontrolled
     const currentValue = isControlled ? watch(name) : get(defaultValues, name);
@@ -112,5 +112,5 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     } as RegisterMuiReturn<TFieldValues, Name>;
   }
 
-  return { ...methods, registerMui };
+  return { ...methods, register, registerHtml };
 }
