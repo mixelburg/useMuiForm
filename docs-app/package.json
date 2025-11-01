@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@stackblitz/sdk": "^1.11.0",
     "fumadocs-core": "^16.0.6",
     "fumadocs-mdx": "^13.0.3",
     "fumadocs-ui": "^16.0.6",
