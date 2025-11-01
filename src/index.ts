@@ -1,6 +1,13 @@
 import { get } from "lodash";
 import React from "react";
-import { type FieldValues, type Path, type PathValue, type UseFormProps, useForm } from "react-hook-form";
+import {
+  type FieldValues,
+  type Path,
+  type PathValue,
+  type RegisterOptions,
+  type UseFormProps,
+  useForm,
+} from "react-hook-form";
 
 type BaseRegisterMuiReturn<TName extends Path<any>> = {
   name: TName;
@@ -56,7 +63,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
 
   function register<Name extends Path<TFieldValues>>(
     name: Name,
-    regOptions?: Parameters<typeof registerHtml<Name>>[1],
+    regOptions?: RegisterOptions<TFieldValues, Name>,
   ): RegisterMuiReturn<TFieldValues, Name> {
     const field = registerHtml(name, regOptions);
     const err = get(errors, name);
