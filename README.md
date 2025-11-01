@@ -1,7 +1,6 @@
 # useMuiForm
 
-A lightweight custom React hook for **form management** with first-class support for **Material-UI (MUI)** and **MUI-X** components.
-
+useMuiForm is a lightweight wrapper around [react-hook-form](https://react-hook-form.com/) that provides seamless integration with Material-UI components. It handles the boilerplate of connecting MUI inputs to react-hook-form while maintaining full access to all react-hook-form features.
 
 📚 **[Documentation](https://mixelburg.github.io/useMuiForm)** - Comprehensive guides, API reference, and examples
 
