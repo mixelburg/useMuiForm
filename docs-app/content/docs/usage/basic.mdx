@@ -1,170 +1,291 @@
 ---
-title: Basic Usage
-description: Learn the basics of using useMuiForm
+title: MUI Components
+description: How to use useMuiForm with different Material-UI components
 ---
 
-# Basic Usage
+# Using with MUI Components
 
-The `useMuiForm` hook provides a simple yet powerful API for managing form state in React applications with Material-UI components.
+useMuiForm's `register` function automatically provides the correct props for MUI components. Here's how to use it with common MUI inputs.
 
-## Creating a Form
+## TextField
 
-First, define your form state type and initialize the hook:
+The most common use case - works with all TextField variants:
 
 ```tsx
 import { useMuiForm } from 'usemuiform'
+import { TextField } from '@mui/material'
 
-type FormState = {
-  email: string
-  role: 'root' | 'admin' | 'developer' | 'user' | 'guest' | ''
-  isActive: boolean
-}
-
-const { state, register, forceValidate, clear } = useMuiForm<FormState>({
-  defaultValues: { email: '', role: '', isActive: false }
+const { register } = useMuiForm<{ email: string }>({
+  defaultValues: { email: '' }
 })
-```
 
-## TextField Component
-
-Use the `register` function to connect Material-UI TextField components:
-
-```tsx
 <TextField
   label="Email"
   type="email"
-  variant="outlined"
-  {...register('email', { required: true })}
-  fullWidth
+  {...register('email', {
+    required: 'Email is required',
+    pattern: {
+      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+      message: 'Invalid email address'
+    }
+  })}
 />
 ```
 
-## Select Component
+## Select (with TextField)
 
-For select inputs, combine TextField with MenuItem:
+Use TextField with `select` prop:
 
 ```tsx
+import { TextField, MenuItem } from '@mui/material'
+
 <TextField
   select
   label="Role"
-  variant="outlined"
   {...register('role')}
-  fullWidth
 >
-  {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
-    <MenuItem key={role} value={role}>
-      {role}
-    </MenuItem>
-  ))}
+  <MenuItem value="admin">Admin</MenuItem>
+  <MenuItem value="user">User</MenuItem>
+  <MenuItem value="guest">Guest</MenuItem>
 </TextField>
 ```
 
-## Checkbox Component
+## Select (standalone)
 
-For checkboxes, use FormControlLabel with Checkbox:
+Or use the standalone Select component:
 
 ```tsx
-import { FormControlLabel, Checkbox } from '@mui/material'
+import { Select, MenuItem } from '@mui/material'
 
+<Select
+  {...register('role')}
+>
+  <MenuItem value="admin">Admin</MenuItem>
+  <MenuItem value="user">User</MenuItem>
+  <MenuItem value="guest">Guest</MenuItem>
+</Select>
+```
+
+## Multiple Select
+
+For multi-select, the value will be an array:
+
+```tsx
+type FormState = {
+  roles: string[]
+}
+
+<Select
+  multiple
+  {...register('roles')}
+>
+  <MenuItem value="admin">Admin</MenuItem>
+  <MenuItem value="user">User</MenuItem>
+  <MenuItem value="guest">Guest</MenuItem>
+</Select>
+```
+
+## Checkbox
+
+Checkboxes need special handling - extract `helperText` and `error` separately:
+
+```tsx
+import { FormControlLabel, Checkbox, FormHelperText, FormGroup } from '@mui/material'
+
+<FormGroup>
+  {(() => {
+    const { helperText, error, ...checkboxProps } = register('isActive')
+    return (
+      <>
+        <FormControlLabel
+          label="Is Active"
+          control={<Checkbox {...checkboxProps} />}
+        />
+        <FormHelperText error={error}>{helperText}</FormHelperText>
+      </>
+    )
+  })()}
+</FormGroup>
+```
+
+Or simpler without helper text:
+
+```tsx
 <FormControlLabel
-  label="Is Active"
-  control={<Checkbox {...register('isActive')} />}
+  label="Accept Terms"
+  control={<Checkbox {...register('acceptTerms')} />}
 />
 ```
 
-## Accessing Form State
+## Switch
 
-The current form state is available through the `state` object:
+Same pattern as Checkbox:
 
 ```tsx
-console.log(state.email) // Current email value
-console.log(state.role)  // Current role value
+import { FormControlLabel, Switch } from '@mui/material'
+
+<FormControlLabel
+  label="Enable Notifications"
+  control={<Switch {...register('notifications')} />}
+/>
 ```
 
-## Submitting the Form
+## DatePicker (MUI X)
 
-Use `forceValidate()` to trigger validation on all fields:
+Works with MUI X date pickers:
 
 ```tsx
-const handleSubmit = () => {
-  if (forceValidate()) {
-    // Form is valid, proceed with submission
-    console.log('Submitting:', state)
+import { DatePicker } from '@mui/x-date-pickers'
+import { LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
 
-    // Optionally clear the form
-    clear()
+type FormState = {
+  birthDate: dayjs.Dayjs
+}
+
+const { register } = useMuiForm<FormState>({
+  defaultValues: { birthDate: dayjs() }
+})
+
+<LocalizationProvider dateAdapter={AdapterDayjs}>
+  <DatePicker
+    label="Birth Date"
+    {...register('birthDate', {
+      validate: (value) => {
+        if (value.isBefore(dayjs().year(2000))) {
+          return 'Date must be after 2000'
+        }
+        return true
+      }
+    })}
+  />
+</LocalizationProvider>
+```
+
+## DateTimePicker
+
+Same as DatePicker:
+
+```tsx
+import { DateTimeField } from '@mui/x-date-pickers'
+
+<DateTimeField
+  label="Appointment"
+  {...register('appointmentTime')}
+/>
+```
+
+## Nested Fields
+
+Use dot notation for nested objects:
+
+```tsx
+type FormState = {
+  person: {
+    name: string
+    email: string
   }
 }
 
-<Button variant="contained" onClick={handleSubmit}>
-  SUBMIT
-</Button>
+<TextField
+  label="Name"
+  {...register('person.name', { required: 'Name is required' })}
+/>
+
+<TextField
+  label="Email"
+  {...register('person.email', { required: 'Email is required' })}
+/>
 ```
 
 ## Complete Example
 
 ```tsx
 import { useMuiForm } from 'usemuiform'
-import { TextField, Button, MenuItem, FormControlLabel, Checkbox } from '@mui/material'
+import {
+  TextField,
+  Button,
+  MenuItem,
+  FormControlLabel,
+  Checkbox,
+  FormGroup,
+  FormHelperText,
+  Stack
+} from '@mui/material'
 
 type FormState = {
   email: string
-  role: 'root' | 'admin' | 'developer' | 'user' | 'guest' | ''
+  role: 'admin' | 'user' | 'guest'
   isActive: boolean
 }
 
 export default function MyForm() {
-  const { state, register, forceValidate, clear } = useMuiForm<FormState>({
-    defaultValues: { email: '', role: '', isActive: false }
+  const { register, handleSubmit } = useMuiForm<FormState>({
+    defaultValues: {
+      email: '',
+      role: 'user',
+      isActive: false
+    }
   })
 
-  const submit = () => {
-    if (forceValidate()) {
-      console.log('Form data:', state)
-      clear()
-    }
+  const onSubmit = (data: FormState) => {
+    console.log('Form data:', data)
   }
 
   return (
-    <div>
+    <Stack spacing={2}>
       <TextField
         label="Email"
         type="email"
-        variant="outlined"
-        {...register('email', { required: true })}
-        fullWidth
+        {...register('email', {
+          required: 'Email is required',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Invalid email'
+          }
+        })}
       />
 
       <TextField
         select
         label="Role"
-        variant="outlined"
         {...register('role')}
-        fullWidth
       >
-        {['root', 'admin', 'developer', 'user', 'guest'].map(role => (
-          <MenuItem key={role} value={role}>
-            {role}
-          </MenuItem>
-        ))}
+        <MenuItem value="admin">Admin</MenuItem>
+        <MenuItem value="user">User</MenuItem>
+        <MenuItem value="guest">Guest</MenuItem>
       </TextField>
 
-      <FormControlLabel
-        label="Is Active"
-        control={<Checkbox {...register('isActive')} />}
-      />
+      <FormGroup>
+        {(() => {
+          const { helperText, error, ...checkboxProps } = register('isActive')
+          return (
+            <>
+              <FormControlLabel
+                label="Is Active"
+                control={<Checkbox {...checkboxProps} />}
+              />
+              <FormHelperText error={error}>{helperText}</FormHelperText>
+            </>
+          )
+        })()}
+      </FormGroup>
 
-      <Button variant="contained" onClick={submit}>
-        SUBMIT
+      <Button variant="contained" onClick={handleSubmit(onSubmit)}>
+        Submit
       </Button>
-    </div>
+    </Stack>
   )
 }
 ```
+
+## For Everything Else
+
+For validation, modes, schemas, and other features, see the [react-hook-form documentation](https://react-hook-form.com/docs).
 
 ## Next Steps
 
 - Learn about [Validation](/docs/usage/validation)
 - Explore [Nested Fields](/docs/usage/nested-fields)
-- Configure [Lazy Inputs](/docs/usage/lazy-inputs)
 

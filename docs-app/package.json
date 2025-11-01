@@ -3,7 +3,7 @@
   "version": "1.2",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 -p 3000",
+    "dev": "next dev --hostname 0.0.0.0 -p 3333",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

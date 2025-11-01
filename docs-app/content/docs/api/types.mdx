@@ -5,338 +5,270 @@ description: TypeScript type definitions for useMuiForm
 
 # Type Definitions
 
-TypeScript type definitions exported by useMuiForm.
+TypeScript type definitions for useMuiForm. Most types are re-exported from [react-hook-form](https://react-hook-form.com/ts), with MUI-specific additions.
 
-## Core Types
+## RegisterMuiReturn
 
-### ValidateFunc
-
-Type for validation functions.
+The return type of the enhanced `register` function. This is the key type that makes useMuiForm unique.
 
 ```tsx
-type ValidateFunc<V, S> = (value: V, state: S) => string | true
+type RegisterMuiReturn<TFieldValues, TName> =
+  PathValue<TFieldValues, TName> extends boolean
+    ? RegisterMuiReturnBoolean<TName>
+    : RegisterMuiReturnValue<TFieldValues, TName>
 ```
 
-#### Parameters
+This is a conditional type that returns different props depending on whether the field is a boolean (checkbox) or not.
 
-- `value` - The current value of the field being validated
-- `state` - The current state of the entire form
+### RegisterMuiReturnValue
 
-#### Returns
-
-- `true` if the field is valid
-- `string` error message if the field is invalid
-
-#### Example
+For non-boolean fields (text inputs, selects, etc.):
 
 ```tsx
-import type { ValidateFunc } from 'usemuiform'
+type RegisterMuiReturnValue<TFieldValues, TName> = {
+  name: TName
+  onChange?: (event: any) => void
+  onBlur: (event: any) => void
+  error: boolean
+  helperText: string
+  inputRef: (instance: any) => void
 
-type FormState = { email: string; age: number }
+  // Controlled mode (mode: 'onChange' or 'all')
+  value?: PathValue<TFieldValues, TName>
 
-const emailValidator: ValidateFunc<string, FormState> = (value, state) => {
-  if (value.length < 5) return 'Email must be at least 5 characters'
-  if (!value.includes('@')) return 'Email must contain @'
-  if (state.age < 13 && value.includes('business')) {
-    return 'Business emails not allowed for users under 13'
-  }
-  return true
+  // Uncontrolled mode (mode: 'onBlur' or 'onSubmit')
+  defaultValue?: PathValue<TFieldValues, TName>
+
+  // Never present for non-boolean fields
+  checked?: never
+  defaultChecked?: never
 }
 ```
 
-### FormatFunc
+### RegisterMuiReturnBoolean
 
-Type for value formatting functions.
-
-```tsx
-type FormatFunc<V> = (value: V) => V
-```
-
-#### Parameters
-
-- `value` - The value to format
-
-#### Returns
-
-The formatted value of the same type
-
-#### Example
+For boolean fields (checkboxes):
 
 ```tsx
-import type { FormatFunc } from 'usemuiform'
+type RegisterMuiReturnBoolean<TName> = {
+  name: TName
+  onChange?: (event: any) => void
+  onBlur: (event: any) => void
+  error: boolean
+  helperText: string
+  inputRef: (instance: any) => void
 
-const uppercaseFormatter: FormatFunc<string> = (value) => {
-  return value.toUpperCase()
-}
+  // Controlled mode (mode: 'onChange' or 'all')
+  checked?: boolean
 
-const phoneFormatter: FormatFunc<string> = (value) => {
-  // Remove non-digits
-  const digits = value.replace(/\D/g, '')
-  // Format as (XXX) XXX-XXXX
-  return digits.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
-}
+  // Uncontrolled mode (mode: 'onBlur' or 'onSubmit')
+  defaultChecked?: boolean
 
-<TextField
-  {...register('phone', { format: phoneFormatter })}
-/>
-```
-
-### IOptions
-
-Options for configuring individual form fields.
-
-```tsx
-interface IOptions<V, S> {
-  /** Whether the field is disabled */
-  disabled?: boolean
-
-  /** Custom validation function */
-  validate?: ValidateFunc<V, S>
-
-  /** Helper text to display below the field */
-  helperText?: string
-
-  /** Whether the field is required */
-  required?: boolean
-
-  /** Function to format/transform the value on change */
-  format?: FormatFunc<V>
-
-  /** Use lazy (uncontrolled) mode for this field */
-  lazy?: boolean
+  // Never present for boolean fields
+  value?: never
+  defaultValue?: never
 }
 ```
 
-#### Example
+### Usage Example
 
 ```tsx
-import type { IOptions } from 'usemuiform'
+import { useMuiForm } from 'usemuiform'
+import { TextField, Checkbox } from '@mui/material'
 
-type FormState = { email: string }
-
-const emailOptions: IOptions<string, FormState> = {
-  required: true,
-  validate: (value) => value.includes('@') || 'Invalid email',
-  helperText: 'Enter your email address',
-  lazy: false
+type FormState = {
+  email: string
+  subscribe: boolean
 }
 
-<TextField {...register('email', emailOptions)} />
-```
+function MyForm() {
+  const { register } = useMuiForm<FormState>({
+    defaultValues: { email: '', subscribe: false }
+  })
 
-### UseMuiFormConfig
+  // TypeScript infers RegisterMuiReturnValue for string field
+  const emailProps = register('email')
+  // emailProps has: value, error, helperText, etc.
 
-Configuration for the form behavior.
+  // TypeScript infers RegisterMuiReturnBoolean for boolean field
+  const subscribeProps = register('subscribe')
+  // subscribeProps has: checked, error, helperText, etc.
 
-```tsx
-interface UseMuiFormConfig {
-  /** Custom error message for required fields */
-  requiredFieldErrorMessage?: string
-
-  /** Default options for all fields */
-  defaultOpts?: {
-    /** Whether fields are required by default */
-    required?: boolean
-    /** Whether fields use lazy (uncontrolled) mode by default */
-    lazy?: boolean
-  }
+  return (
+    <>
+      <TextField {...emailProps} />
+      <Checkbox {...subscribeProps} />
+    </>
+  )
 }
 ```
 
-#### Example
+## UseMuiFormReturn
+
+The return type of the `useMuiForm` hook. Extends react-hook-form's `UseFormReturn` with MUI-specific methods.
 
 ```tsx
-import type { UseMuiFormConfig } from 'usemuiform'
+type UseMuiFormReturn<TFieldValues> = UseFormReturn<TFieldValues> & {
+  // MUI-enhanced register function
+  register: <Name extends Path<TFieldValues>>(
+    name: Name,
+    options?: RegisterOptions<TFieldValues, Name>
+  ) => RegisterMuiReturn<TFieldValues, Name>
 
-const config: UseMuiFormConfig = {
-  requiredFieldErrorMessage: 'This field is mandatory',
-  defaultOpts: {
-    required: false,
-    lazy: true
-  }
-}
-
-const form = useMuiForm({
-  defaultValues: { email: '' },
-  config
-})
-```
-
-### UseMuiFormOpts
-
-Options passed to the useMuiForm hook.
-
-```tsx
-type UseMuiFormOpts<State extends IState> = {
-  /** Initial values for the form fields */
-  defaultValues?: State
-
-  /** Configuration options for form behavior */
-  config?: UseMuiFormConfig
+  // Access to original react-hook-form register
+  registerHtml: UseFormRegister<TFieldValues>
 }
 ```
 
-#### Example
+All other methods and properties are inherited from react-hook-form's [UseFormReturn](https://react-hook-form.com/ts#UseFormReturn).
+
+## Re-exported Types
+
+The following types are re-exported from react-hook-form for convenience:
+
+### FieldValues
+
+Base type for form state objects.
 
 ```tsx
-import type { UseMuiFormOpts } from 'usemuiform'
-
-type FormState = { email: string; name: string }
-
-const formOpts: UseMuiFormOpts<FormState> = {
-  defaultValues: { email: '', name: '' },
-  config: {
-    requiredFieldErrorMessage: 'Required',
-    defaultOpts: { required: true }
-  }
-}
-
-const form = useMuiForm(formOpts)
+import type { FieldValues } from 'usemuiform'
 ```
 
-### DotPath
+See [react-hook-form FieldValues](https://react-hook-form.com/ts#FieldValues).
 
-Utility type that generates type-safe dot-notation paths for nested objects.
+### Path
 
-```tsx
-type DotPath<T> = // ... complex type definition
-```
-
-This type is automatically inferred and provides autocomplete for nested field paths.
-
-#### Example
+Type-safe field name paths including dot-notation for nested fields.
 
 ```tsx
+import type { Path } from 'usemuiform'
+
 type FormState = {
   user: {
     name: string
     email: string
   }
-  address: {
-    street: string
-    city: string
-  }
 }
 
-// DotPath<FormState> resolves to:
-// 'user' | 'user.name' | 'user.email' | 'address' | 'address.street' | 'address.city'
-
-// TypeScript provides autocomplete for these paths:
-register('user.name')      // ✅ Valid
-register('user.email')     // ✅ Valid
-register('address.city')   // ✅ Valid
-register('user.age')       // ❌ Error: Property 'age' does not exist
+// Valid paths: 'user', 'user.name', 'user.email'
+type ValidPaths = Path<FormState>
 ```
 
-## Helper Types
+See [react-hook-form Path](https://react-hook-form.com/ts#Path).
 
-### IState
+### PathValue
 
-Base interface for form state objects.
-
-```tsx
-interface IState {
-  [key: string]: any
-}
-```
-
-All form state types must extend this interface.
-
-### IErrorState
-
-Type for the errors object, mapping field paths to error messages.
+Get the type of a value at a specific path.
 
 ```tsx
-type IErrorState<State> = {
-  [K in keyof State]: State[K] extends object
-    ? IErrorState<State[K]>
-    : string | undefined
-}
-```
+import type { PathValue } from 'usemuiform'
 
-### ITouchedState
-
-Type for the touched state, mapping field paths to boolean values.
-
-```tsx
-type ITouchedState<State> = {
-  [K in keyof State]: State[K] extends object
-    ? ITouchedState<State[K]>
-    : boolean
-}
-```
-
-## Usage Examples
-
-### Complete Type-Safe Form
-
-```tsx
-import {
-  useMuiForm,
-  type ValidateFunc,
-  type FormatFunc,
-  type UseMuiFormConfig
-} from 'usemuiform'
-
-// Define your form state
 type FormState = {
   user: {
-    firstName: string
-    lastName: string
-    email: string
-  }
-  settings: {
-    newsletter: boolean
-    notifications: boolean
+    name: string
+    age: number
   }
 }
 
-// Type-safe validators
-const emailValidator: ValidateFunc<string, FormState> = (value, state) => {
-  if (!value.includes('@')) return 'Invalid email'
-  return true
+type NameType = PathValue<FormState, 'user.name'> // string
+type AgeType = PathValue<FormState, 'user.age'>   // number
+```
+
+See [react-hook-form PathValue](https://react-hook-form.com/ts#PathValue).
+
+### UseFormProps
+
+Configuration options for `useMuiForm`.
+
+```tsx
+import type { UseFormProps } from 'usemuiform'
+```
+
+See [react-hook-form UseFormProps](https://react-hook-form.com/ts#UseFormProps).
+
+### RegisterOptions
+
+Validation and configuration options for the `register` function.
+
+```tsx
+import type { RegisterOptions } from 'usemuiform'
+
+const options: RegisterOptions<FormState, 'email'> = {
+  required: 'Email is required',
+  pattern: {
+    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+    message: 'Invalid email address'
+  }
+}
+```
+
+See [react-hook-form RegisterOptions](https://react-hook-form.com/ts#RegisterOptions).
+
+### FieldErrors
+
+Type for form validation errors.
+
+```tsx
+import type { FieldErrors } from 'usemuiform'
+
+const { formState } = useMuiForm<FormState>()
+const errors: FieldErrors<FormState> = formState.errors
+```
+
+See [react-hook-form FieldErrors](https://react-hook-form.com/ts#FieldErrors).
+
+## Complete Example with Types
+
+```tsx
+import { useMuiForm, type RegisterMuiReturn } from 'usemuiform'
+import { TextField, Checkbox, FormControlLabel } from '@mui/material'
+
+type FormState = {
+  username: string
+  email: string
+  age: number
+  acceptTerms: boolean
 }
 
-// Type-safe formatters
-const nameFormatter: FormatFunc<string> = (value) => {
-  return value.trim().replace(/\s+/g, ' ')
-}
-
-// Type-safe config
-const config: UseMuiFormConfig = {
-  requiredFieldErrorMessage: 'This field is required',
-  defaultOpts: { required: true, lazy: false }
-}
-
-// Create form with full type safety
-export default function MyForm() {
-  const { state, errors, register, forceValidate } = useMuiForm<FormState>({
+function TypedForm() {
+  const { register, handleSubmit } = useMuiForm<FormState>({
     defaultValues: {
-      user: { firstName: '', lastName: '', email: '' },
-      settings: { newsletter: false, notifications: false }
-    },
-    config
+      username: '',
+      email: '',
+      age: 0,
+      acceptTerms: false
+    }
   })
 
-  // TypeScript knows about all nested paths
+  // Type is automatically inferred
+  const usernameProps = register('username', { required: 'Required' })
+
+  // Can also explicitly type if needed
+  const emailProps: RegisterMuiReturn<FormState, 'email'> = register('email')
+
+  const onSubmit = (data: FormState) => {
+    // data is fully typed
+    console.log(data.username) // string
+    console.log(data.age)      // number
+    console.log(data.acceptTerms) // boolean
+  }
+
   return (
-    <div>
+    <form>
+      <TextField label="Username" {...usernameProps} />
+      <TextField label="Email" {...emailProps} />
       <TextField
-        {...register('user.firstName', {
-          required: true,
-          format: nameFormatter
+        label="Age"
+        type="number"
+        {...register('age', {
+          min: { value: 18, message: 'Must be 18+' }
         })}
       />
-      <TextField
-        {...register('user.email', {
-          required: true,
-          validate: emailValidator
-        })}
+      <FormControlLabel
+        control={<Checkbox {...register('acceptTerms')} />}
+        label="Accept Terms"
       />
-      <Checkbox
-        {...register('settings.newsletter')}
-      />
-    </div>
+    </form>
   )
 }
 ```
@@ -344,5 +276,5 @@ export default function MyForm() {
 ## See Also
 
 - [useMuiForm Hook](/docs/api/use-mui-form)
-- [UseMuiFormConfigProvider](/docs/api/config-provider)
+- [react-hook-form TypeScript Support](https://react-hook-form.com/ts)
 
