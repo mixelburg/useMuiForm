@@ -19,10 +19,3 @@ bun add usemuiform
 [👉 Live Demo on StackBlitz](https://stackblitz.com/github/mixelburg/usemuiform?file=test%2FApp.tsx)
 
 ---
-
-
-### ✨ Why?
-
-This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form).  
-It follows similar API patterns and design decisions, but is **purpose-built for MUI**.
-
