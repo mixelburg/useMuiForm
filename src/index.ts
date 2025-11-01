@@ -2,28 +2,38 @@ import { get } from "lodash";
 import React from "react";
 import { type FieldValues, type Path, type PathValue, type UseFormProps, useForm } from "react-hook-form";
 
-type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = {
+type BaseRegisterMuiReturn<TName extends Path<any>> = {
   name: TName;
   onChange?: (event: any) => void;
   onBlur: (event: any) => void;
   error: boolean;
   helperText: string;
   inputRef: (instance: any) => void;
-} & (PathValue<TFieldValues, TName> extends boolean
-  ? { checked?: boolean; defaultChecked?: boolean; value?: never; defaultValue?: never }
-  : PathValue<TFieldValues, TName> extends string
-    ? {
-        value?: PathValue<TFieldValues, TName> | "";
-        defaultValue?: PathValue<TFieldValues, TName> | "";
-        checked?: never;
-        defaultChecked?: never;
-      }
-    : {
-        value?: PathValue<TFieldValues, TName>;
-        defaultValue?: PathValue<TFieldValues, TName>;
-        checked?: never;
-        defaultChecked?: never;
-      });
+};
+
+type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
+  checked?: boolean;
+  defaultChecked?: boolean;
+  value?: never;
+  defaultValue?: never;
+};
+
+type RegisterMuiReturnValue<
+  TFieldValues extends FieldValues,
+  TName extends Path<TFieldValues>,
+> = BaseRegisterMuiReturn<TName> & {
+  value?: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
+  defaultValue?: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
+  checked?: never;
+  defaultChecked?: never;
+};
+
+type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
+  TFieldValues,
+  TName
+> extends boolean
+  ? RegisterMuiReturnBoolean<TName>
+  : RegisterMuiReturnValue<TFieldValues, TName>;
 
 const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => {
   return (v as React.ChangeEvent<HTMLInputElement>)?.target?.value !== undefined;
@@ -74,7 +84,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
       }
     };
 
-    const baseReturn = {
+    const baseReturn: BaseRegisterMuiReturn<Name> = {
       name,
       onChange: wrappedOnChange,
       onBlur: wrappedOnBlur,
@@ -87,7 +97,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
       return {
         ...baseReturn,
         ...(isControlled ? { checked: currentValue as boolean } : { defaultChecked: currentValue as boolean }),
-      } as unknown as RegisterMuiReturn<TFieldValues, Name>;
+      } as RegisterMuiReturn<TFieldValues, Name>;
     }
 
     // Calculate final value with appropriate fallback
@@ -99,7 +109,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     return {
       ...baseReturn,
       ...(isControlled ? { value: finalValue } : { defaultValue: finalValue }),
-    } as unknown as RegisterMuiReturn<TFieldValues, Name>;
+    } as RegisterMuiReturn<TFieldValues, Name>;
   }
 
   return { ...methods, registerMui };
