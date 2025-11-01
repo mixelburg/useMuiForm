@@ -1,28 +1,28 @@
 import {
   Button,
   Checkbox,
-  CircularProgress,
   FormControlLabel,
   FormGroup,
   FormHelperText,
   MenuItem,
   Paper,
+  Select,
   Stack,
   TextField,
 } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimeField } from "@mui/x-date-pickers/DateTimeField";
 import dayjs from "dayjs";
 import { type FC, useState } from "react";
 import JSONPretty from "react-json-pretty";
-import { useMuiForm } from "@/src";
-import type { ValidateFunc } from "@/src/types";
 import "react-json-pretty/themes/monikai.css";
+import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { useMuiForm } from "@/src";
 
+type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
   email: string;
-  role: "root" | "admin" | "developer" | "user" | "guest" | "";
+  role: Role;
+  roles: Role[];
   racoon: boolean;
   birth: dayjs.Dayjs;
   person: {
@@ -31,133 +31,136 @@ type State = {
   description: string;
 };
 
-const App: FC = () => {
-  const { state, register, forceValidate, clear, setState } = useMuiForm<State>({
+type DemoFormProps = {
+  mode: "onChange" | "onBlur" | "onSubmit" | "onTouched" | "all";
+};
+
+const DemoForm: FC<DemoFormProps> = ({ mode }) => {
+  const { register, handleSubmit } = useMuiForm<State>({
     defaultValues: {
+      roles: [],
       email: "",
       role: "root",
-      racoon: false,
+      racoon: true,
       birth: dayjs(),
       person: {
-        name: "",
+        name: "ivan",
       },
       description: "",
     },
+    mode,
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  const submit = async () => {
-    if (submitting) return;
-    if (forceValidate()) {
-      setSubmitting(true);
-      // wait 1 second
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSubmitting(false);
-    }
-  };
+  const [state, setState] = useState<State>();
 
-  const alterState = () => {
-    setState((ps) => ({
-      ...ps,
-      email: "have-changed@gmail.com",
-    }));
-  };
-
-  const emailValidator: ValidateFunc<State["email"], State> = (value) => {
-    if (value.length < 5) {
-      return "Email must be at least 5 characters long";
-    }
-    if (!value.includes("@")) {
-      return "Email must contain @";
-    }
-    return true;
+  const submit = async (data: State) => {
+    setState(data);
   };
 
   const birthProps = register("birth", {
     required: true,
-    validate: (value) => {
-      // get value of year 2000
+    validate: (_value) => {
       const year2000 = dayjs().year(2000);
-      if (value.isBefore(year2000)) {
+      if (_value.isBefore(year2000)) {
         return "birth date must be after 2000";
       }
       return true;
     },
   });
 
-  const {
-    helperText: checkboxHelperText,
-    error: checkboxError,
-    ...checkBoxProps
-  } = register("racoon", { required: false });
+  return (
+    <Stack direction="row" spacing={2}>
+      <Stack maxHeight={500} spacing={2}>
+        <h1>Hello World</h1>
+        <TextField
+          label="name"
+          variant="outlined"
+          {...register("person.name", { required: true })}
+          defaultValue={"maks"}
+        />
+
+        <TextField
+          label="email"
+          type="email"
+          variant="outlined"
+          {...register("email", {
+            validate: (value) => {
+              if (value.length < 5) {
+                return "Email must be at least 5 characters long";
+              }
+              if (!value.includes("@")) {
+                return "Email must contain @";
+              }
+              return;
+            },
+          })}
+          fullWidth
+        />
+
+        <TextField label="description" variant="outlined" {...register("description", {})} fullWidth />
+
+        <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
+          {["root", "admin", "developer", "user", "guest"].map((role) => (
+            <MenuItem key={role} value={role}>
+              {role}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <Select multiple label="roles" variant="outlined" {...register("roles")} fullWidth>
+          {["root", "admin", "developer", "user", "guest"].map((role) => (
+            <MenuItem key={role} value={role}>
+              {role}
+            </MenuItem>
+          ))}
+        </Select>
+
+        <FormGroup>
+          {(() => {
+            const { helperText, error, ...checkboxProps } = register("racoon");
+            return (
+              <>
+                <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
+                <FormHelperText error={error}>{helperText}</FormHelperText>
+              </>
+            );
+          })()}
+        </FormGroup>
+
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimeField label="birth" {...birthProps} />
+        </LocalizationProvider>
+
+        <Button variant="contained" onClick={handleSubmit(submit)}>
+          "SUBMIT"
+        </Button>
+      </Stack>
+      <JSONPretty data={state} />
+    </Stack>
+  );
+};
+
+const App: FC = () => {
+  const [mode, setMode] = useState<DemoFormProps["mode"]>("onBlur");
 
   return (
-    <Stack height="100%" alignItems="center" justifyContent="center" component={Paper}>
-      <Stack direction="row" spacing={2}>
-        <Stack maxHeight={500} spacing={2}>
-          <h1>Hello World</h1>
+    <Stack height="100%" alignItems="center" justifyContent="center" component={Paper} spacing={2} padding={2}>
+      <TextField
+        select
+        label="Form Mode"
+        value={mode}
+        onChange={(e) => setMode(e.target.value as typeof mode)}
+        variant="outlined"
+        sx={{ width: 300 }}
+      >
+        <MenuItem value="onChange">onChange (Controlled)</MenuItem>
+        <MenuItem value="onBlur">onBlur</MenuItem>
+        <MenuItem value="onSubmit">onSubmit</MenuItem>
+        <MenuItem value="onTouched">onTouched</MenuItem>
+        <MenuItem value="all">all</MenuItem>
+      </TextField>
 
-          <TextField label="name" variant="outlined" {...register("person.name")} />
-          <TextField
-            label="email"
-            type="email"
-            variant="outlined"
-            {...register("email", {
-              required: true,
-              validate: emailValidator,
-            })}
-            fullWidth
-          />
-          <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
-            {["root", "admin", "developer", "user", "guest"].map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
-              </MenuItem>
-            ))}
-          </TextField>
-          <FormGroup>
-            <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkBoxProps} />} />
-            <FormHelperText error={checkboxError}>{checkboxHelperText}</FormHelperText>
-          </FormGroup>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimeField label="birth" {...birthProps} />
-          </LocalizationProvider>
-          <TextField
-            label="description (lazy - updates on blur)"
-            variant="outlined"
-            {...register("description", {
-              required: true,
-              lazy: true,
-              validate: (value) => {
-                if (value.length < 10) {
-                  return "Description must be at least 10 characters long";
-                }
-                return true;
-              },
-            })}
-            fullWidth
-            multiline
-            minRows={3}
-          />
-
-          <Button variant="contained" color="warning" onClick={alterState}>
-            CHANGE STATE
-          </Button>
-          <Button variant="contained" color="secondary" onClick={clear}>
-            RESET
-          </Button>
-          <Button variant="contained" onClick={submit} disabled={submitting}>
-            {submitting ? (
-              <Stack sx={{ color: "black" }}>
-                <CircularProgress color="inherit" size={24} />{" "}
-              </Stack>
-            ) : (
-              "SUBMIT"
-            )}
-          </Button>
-        </Stack>
-        <JSONPretty data={state} />
-      </Stack>
+      <DemoForm key={mode} mode={mode} />
     </Stack>
   );
 };

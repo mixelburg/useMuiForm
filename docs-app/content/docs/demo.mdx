@@ -1,0 +1,82 @@
+---
+title: Live Demo
+description: Interactive demo of useMuiForm with StackBlitz
+---
+
+import { StackBlitzDemo } from '@/app/components/StackBlitzDemo'
+
+
+# Live Demo
+
+[👉 Live Demo on StackBlitz](https://stackblitz.com/github/mixelburg/usemuiform?file=test%2FApp.tsx)
+
+## Interactive Demo
+
+<StackBlitzDemo />
+
+## What's in the Demo?
+
+The demo showcases:
+
+- **Basic form validation** with required fields
+- **Pattern validation** for email addresses
+- **Custom validation** functions
+- **Nested field** support with dot notation
+- **Checkbox handling** with proper boolean state
+- **Form submission** with validation
+- **Error display** using MUI's error and helperText props
+- **Various MUI components** (TextField, Checkbox, Select, etc.)
+
+## Open in StackBlitz
+
+Want to edit the full code? [Open the demo in StackBlitz](https://stackblitz.com/github/mixelburg/usemuiform?file=test%2FApp.tsx) to get the complete development environment.
+
+## Key Features Demonstrated
+
+### 1. Simple Integration
+
+```tsx
+const { register, handleSubmit } = useMuiForm<FormState>({
+  defaultValues: { email: '', name: '' }
+})
+
+<TextField {...register('email')} />
+```
+
+### 2. Built-in Validation
+
+```tsx
+<TextField
+  {...register('email', {
+    required: 'Email is required',
+    pattern: {
+      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+      message: 'Invalid email address'
+    }
+  })}
+/>
+```
+
+### 3. Automatic Error Display
+
+No need to manually check `formState.errors` - the `error` and `helperText` props are automatically provided:
+
+```tsx
+// This just works - errors are displayed automatically
+<TextField {...register('email', { required: 'Required' })} />
+```
+
+### 4. Checkbox Support
+
+Boolean fields automatically get `checked` instead of `value`:
+
+```tsx
+<Checkbox {...register('acceptTerms')} />
+```
+
+## Next Steps
+
+- [Getting Started Guide](/docs)
+- [Usage Examples](/docs/usage)
+- [API Reference](/docs/api)
+

@@ -1,44 +1,45 @@
 ---
 title: Getting Started
-description: Get started with useMuiForm - a lightweight React hook for form management with Material-UI
+description: Get started with useMuiForm - a lightweight wrapper around react-hook-form for Material-UI
 ---
 
-# useMuiForm
+useMuiForm is a lightweight wrapper around [react-hook-form](https://react-hook-form.com/) that provides seamless integration with Material-UI components. It handles the boilerplate of connecting MUI inputs to react-hook-form while maintaining full access to all react-hook-form features.
 
-A lightweight custom React hook for **form management** with first-class support for **Material-UI (MUI)** and **MUI-X** components.
+## Why useMuiForm?
 
-## Why?
+react-hook-form returns props like `onChange`, `onBlur`, `ref`, etc. But MUI components expect:
+- `error` (boolean) instead of checking errors manually
+- `helperText` (string) for displaying error messages
+- `inputRef` instead of `ref`
+- `checked`/`defaultChecked` for checkboxes instead of `value`
 
-This library was inspired by [react-hook-form](https://www.npmjs.com/package/react-hook-form).
-It follows similar API patterns and design decisions, but is **purpose-built for MUI**.
+useMuiForm's enhanced `register` function automatically provides these MUI-compatible props.
 
 ## Installation
 
 Choose your package manager:
 
 ```bash
-npm i usemuiform
+npm i usemuiform react-hook-form
 ```
 
 ```bash
-pnpm add usemuiform
+pnpm add usemuiform react-hook-form
 ```
 
 ```bash
-yarn add usemuiform
+yarn add usemuiform react-hook-form
 ```
 
 ```bash
-bun add usemuiform
+bun add usemuiform react-hook-form
 ```
 
 ## Quick Start
 
-Here's a simple example to get you started:
-
 ```tsx
 import { useMuiForm } from 'usemuiform'
-import { TextField, Button } from '@mui/material'
+import { TextField, Button, Stack } from '@mui/material'
 
 type FormState = {
   email: string
@@ -46,36 +47,56 @@ type FormState = {
 }
 
 function MyForm() {
-  const { register, forceValidate } = useMuiForm<FormState>({
+  const { register, handleSubmit } = useMuiForm<FormState>({
     defaultValues: { email: '', name: '' }
   })
 
-  const handleSubmit = () => {
-    if (forceValidate()) {
-      console.log('Form is valid!')
-    }
+  const onSubmit = (data: FormState) => {
+    console.log('Form data:', data)
   }
 
   return (
-    <form>
+    <Stack spacing={2}>
       <TextField
         label="Email"
-        {...register('email', { required: true })}
+        type="email"
+        {...register('email', {
+          required: 'Email is required',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Invalid email address'
+          }
+        })}
       />
       <TextField
         label="Name"
-        {...register('name', { required: true })}
+        {...register('name', { required: 'Name is required' })}
       />
-      <Button onClick={handleSubmit}>Submit</Button>
-    </form>
+      <Button variant="contained" onClick={handleSubmit(onSubmit)}>
+        Submit
+      </Button>
+    </Stack>
   )
 }
 ```
 
+## What You Get
+
+All react-hook-form features work as normal:
+- All validation options (required, pattern, min, max, validate, etc.)
+- All modes (onChange, onBlur, onSubmit, etc.)
+- Schema validation (Zod, Yup, etc.)
+- All hook methods (watch, setValue, trigger, reset, etc.)
+
+**Plus** MUI-compatible props from `register`:
+- `error` - boolean indicating validation error
+- `helperText` - error message string
+- `inputRef` - proper ref for MUI inputs
+- `checked`/`defaultChecked` - for checkbox/switch components
+
 ## Next Steps
 
-- Check out the [Basic Usage](/docs/usage/basic) guide
-- Learn about [Validation](/docs/usage/validation)
-- Explore [Configuration](/docs/configuration)
-- View the [API Reference](/docs/api/use-mui-form)
+- [Usage with MUI Components](/docs/usage/basic) - Examples for TextField, Select, Checkbox, DatePicker
+- [react-hook-form Documentation](https://react-hook-form.com/docs) - For validation, modes, and advanced features
+- [API Reference](/docs/api/use-mui-form) - Complete API documentation
 

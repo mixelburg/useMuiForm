@@ -3,12 +3,13 @@
   "version": "1.2",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 -p 3000",
+    "dev": "next dev --hostname 0.0.0.0 -p 3333",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@stackblitz/sdk": "^1.11.0",
     "fumadocs-core": "^16.0.6",
     "fumadocs-mdx": "^13.0.3",
     "fumadocs-ui": "^16.0.6",

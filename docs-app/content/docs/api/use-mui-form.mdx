@@ -5,7 +5,7 @@ description: API reference for the useMuiForm hook
 
 # useMuiForm
 
-The main hook for creating and managing forms with Material-UI components.
+The main hook for creating and managing forms with Material-UI components. Built on top of [react-hook-form](https://react-hook-form.com/) with MUI-specific enhancements.
 
 ## Import
 
@@ -16,333 +16,151 @@ import { useMuiForm } from 'usemuiform'
 ## Type Signature
 
 ```tsx
-function useMuiForm<State extends IState>(
-  opts?: UseMuiFormOpts<State>
-): UseMuiFormReturn<State>
+function useMuiForm<TFieldValues extends FieldValues = FieldValues>(
+  options?: UseFormProps<TFieldValues>
+): UseMuiFormReturn<TFieldValues>
 ```
 
 ## Parameters
 
-### opts
+Accepts all [react-hook-form `useForm` options](https://react-hook-form.com/docs/useform). Commonly used options include:
 
-Configuration object for the form.
+- `defaultValues` - Initial form values
+- `mode` - Validation strategy (`onChange`, `onBlur`, `onSubmit`, etc.)
+- `resolver` - Schema validation (Zod, Yup, etc.)
 
-```tsx
-type UseMuiFormOpts<State> = {
-  /** Initial values for the form fields */
-  defaultValues?: State
-
-  /** Configuration options for form behavior */
-  config?: UseMuiFormConfig
-}
-```
-
-#### defaultValues
-
-The initial state of your form. Should match your form state type.
-
-```tsx
-const form = useMuiForm<{ email: string; name: string }>({
-  defaultValues: { email: '', name: '' }
-})
-```
-
-#### config
-
-Configuration options that override global settings. See [Configuration](/docs/configuration) for details.
-
-```tsx
-const form = useMuiForm({
-  defaultValues: { email: '' },
-  config: {
-    requiredFieldErrorMessage: 'Required',
-    defaultOpts: {
-      required: true,
-      lazy: false
-    }
-  }
-})
-```
+See the [react-hook-form documentation](https://react-hook-form.com/docs/useform) for the complete list of options.
 
 ## Return Value
 
-The hook returns an object with the following properties and methods:
-
-### state
-
-The current form state.
-
-```tsx
-const { state } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
-
-console.log(state.email) // Current email value
-```
-
-### errors
-
-An object containing error messages for each field. `undefined` if no error.
-
-```tsx
-const { errors } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
-
-console.log(errors.email) // Error message or undefined
-```
-
-### touched
-
-An object tracking which fields have been interacted with.
-
-```tsx
-const { touched } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
-
-console.log(touched.email) // true if field has been touched
-```
+Returns all [react-hook-form methods](https://react-hook-form.com/docs/useform) with the following MUI-specific enhancements:
 
 ### register
 
-Function to register a field with the form. Returns props to spread onto your input component.
+**This is the key MUI-specific enhancement.** Enhanced register function that returns MUI-compatible props instead of standard HTML input props.
 
 ```tsx
-function register<Path extends DotPath<State>>(
-  name: Path,
-  options?: IOptions<PathValue<State, Path>, State>
-): RegisterReturn
+function register<Name extends Path<TFieldValues>>(
+  name: Name,
+  options?: RegisterOptions<TFieldValues, Name>
+): RegisterMuiReturn<TFieldValues, Name>
 ```
 
-#### name
+#### Parameters
 
-The field name or dot-notation path for nested fields.
+**name**: Field name or dot-notation path for nested fields
 
 ```tsx
 register('email')           // Simple field
-register('user.email')      // Nested field
-register('address.city')    // Nested field
+register('person.name')     // Nested field
+register('address.city')    // Deeply nested field
 ```
 
-#### options
+**options**: Standard [react-hook-form validation options](https://react-hook-form.com/docs/useform/register#options) (`required`, `pattern`, `validate`, etc.)
 
-Field-specific configuration.
+#### Return Value
 
-```tsx
-interface IOptions<V, S> {
-  /** Whether the field is disabled */
-  disabled?: boolean
-
-  /** Custom validation function */
-  validate?: ValidateFunc<V, S>
-
-  /** Helper text to display below the field */
-  helperText?: string
-
-  /** Whether the field is required */
-  required?: boolean
-
-  /** Function to format/transform the value on change */
-  format?: FormatFunc<V>
-
-  /** Use lazy (uncontrolled) mode for this field */
-  lazy?: boolean
-}
-```
-
-#### Return value
-
-Returns an object with props to spread onto your MUI component:
+**This is what makes useMuiForm unique** - instead of standard HTML props, you get MUI-compatible props:
 
 ```tsx
 {
-  value: any          // Current field value (for controlled)
-  defaultValue: any   // Initial value (for lazy/uncontrolled)
-  onChange: function  // Change handler
-  onBlur: function    // Blur handler (for lazy inputs)
-  error: boolean      // Whether field has an error
-  helperText: string  // Error message or custom helper text
-  disabled: boolean   // Whether field is disabled
-  inputRef: RefObject // Ref for lazy inputs
+  name: string           // Field name
+  onChange: function     // Change handler (supports both events and direct values)
+  onBlur: function       // Blur handler
+  error: boolean         // Whether field has validation error
+  helperText: string     // Error message (empty if no error)
+  inputRef: RefObject    // React ref for the input
+
+  // For non-boolean fields:
+  value?: any            // Current value (controlled mode)
+  defaultValue?: any     // Initial value (uncontrolled mode)
+
+  // For boolean fields (checkboxes):
+  checked?: boolean      // Current checked state (controlled mode)
+  defaultChecked?: boolean // Initial checked state (uncontrolled mode)
 }
 ```
 
-### forceValidate
+The key differences from react-hook-form's `register`:
+- Returns `error` (boolean) and `helperText` (string) instead of requiring you to access `formState.errors`
+- Automatically handles MUI's `checked`/`defaultChecked` for checkbox components
+- The `onChange` handler works with both MUI events and direct values
 
-Triggers validation on all fields and returns whether the form is valid.
+### registerHtml
 
-```tsx
-function forceValidate(): boolean
-```
-
-Returns `true` if all fields are valid, `false` otherwise.
-
-```tsx
-const handleSubmit = () => {
-  if (forceValidate()) {
-    console.log('Form is valid!', state)
-  } else {
-    console.log('Form has errors')
-  }
-}
-```
-
-### clear
-
-Resets the form to its default values.
+Access to the original react-hook-form `register` function for use with native HTML inputs:
 
 ```tsx
-function clear(): void
-```
-
-```tsx
-const handleReset = () => {
-  clear()
-}
-```
-
-### setValue
-
-Programmatically set the value of a field.
-
-```tsx
-function setValue<Path extends DotPath<State>>(
-  name: Path,
-  value: PathValue<State, Path>
-): void
-```
-
-```tsx
-const { setValue } = useMuiForm<{ email: string }>({
+const { registerHtml } = useMuiForm<FormState>({
   defaultValues: { email: '' }
 })
 
-setValue('email', 'user@example.com')
+// Use for native HTML inputs
+<input {...registerHtml('email')} />
 ```
 
-### isValid
+### Other Methods
 
-Boolean indicating whether the form is currently valid.
+All other react-hook-form methods are available unchanged:
 
-```tsx
-const { isValid } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
+- `handleSubmit` - [Documentation](https://react-hook-form.com/docs/useform/handlesubmit)
+- `watch` - [Documentation](https://react-hook-form.com/docs/useform/watch)
+- `formState` - [Documentation](https://react-hook-form.com/docs/useform/formstate)
+- `setValue` - [Documentation](https://react-hook-form.com/docs/useform/setvalue)
+- `getValues` - [Documentation](https://react-hook-form.com/docs/useform/getvalues)
+- `reset` - [Documentation](https://react-hook-form.com/docs/useform/reset)
+- `trigger` - [Documentation](https://react-hook-form.com/docs/useform/trigger)
+- `setError` - [Documentation](https://react-hook-form.com/docs/useform/seterror)
+- `clearErrors` - [Documentation](https://react-hook-form.com/docs/useform/clearerrors)
+- And all other [useForm methods](https://react-hook-form.com/docs/useform)
 
-console.log(isValid) // true or false
-```
-
-### isAnyTouched
-
-Boolean indicating whether any field has been touched.
-
-```tsx
-const { isAnyTouched } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
-
-console.log(isAnyTouched) // true if any field touched
-```
-
-### isChanged
-
-Boolean indicating whether the form state differs from default values.
+## Example
 
 ```tsx
-const { isChanged } = useMuiForm<{ email: string }>({
-  defaultValues: { email: '' }
-})
-
-console.log(isChanged) // true if form has changes
-```
-
-## Complete Example
-
-```tsx
-import { useMuiForm, type ValidateFunc } from 'usemuiform'
-import { TextField, Button } from '@mui/material'
+import { useMuiForm } from 'usemuiform'
+import { TextField, Button, Stack } from '@mui/material'
 
 type FormState = {
   email: string
   name: string
 }
 
-export default function MyForm() {
-  const {
-    state,
-    errors,
-    touched,
-    register,
-    forceValidate,
-    clear,
-    setValue,
-    isValid,
-    isAnyTouched,
-    isChanged
-  } = useMuiForm<FormState>({
-    defaultValues: { email: '', name: '' },
-    config: {
-      requiredFieldErrorMessage: 'This field is required'
-    }
+function MyForm() {
+  const { register, handleSubmit } = useMuiForm<FormState>({
+    defaultValues: { email: '', name: '' }
   })
 
-  const emailValidator: ValidateFunc<string, FormState> = (value) => {
-    if (!value.includes('@')) return 'Invalid email'
-    return true
-  }
-
-  const handleSubmit = () => {
-    if (forceValidate()) {
-      console.log('Submitted:', state)
-      clear()
-    }
-  }
-
-  const handlePrefill = () => {
-    setValue('email', 'test@example.com')
-    setValue('name', 'John Doe')
+  const onSubmit = (data: FormState) => {
+    console.log('Form data:', data)
   }
 
   return (
-    <div>
+    <Stack component="form" spacing={2}>
       <TextField
         label="Email"
         {...register('email', {
-          required: true,
-          validate: emailValidator
+          required: 'Email is required',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Invalid email address'
+          }
         })}
-        fullWidth
       />
 
       <TextField
         label="Name"
-        {...register('name', { required: true })}
-        fullWidth
+        {...register('name', { required: 'Name is required' })}
       />
 
-      <div>
-        <p>Is Valid: {isValid ? 'Yes' : 'No'}</p>
-        <p>Any Touched: {isAnyTouched ? 'Yes' : 'No'}</p>
-        <p>Has Changes: {isChanged ? 'Yes' : 'No'}</p>
-      </div>
-
-      <Button onClick={handleSubmit} disabled={!isValid}>
+      <Button variant="contained" onClick={handleSubmit(onSubmit)}>
         Submit
       </Button>
-      <Button onClick={handlePrefill}>
-        Prefill
-      </Button>
-      <Button onClick={clear}>
-        Clear
-      </Button>
-    </div>
+    </Stack>
   )
 }
 ```
 
 ## See Also
 
-- [UseMuiFormConfigProvider](/docs/api/config-provider)
 - [Type Definitions](/docs/api/types)
-
+- [react-hook-form Documentation](https://react-hook-form.com/)

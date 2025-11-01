@@ -1,14 +1,4 @@
 {
   "title": "useMuiForm Documentation",
-  "pages": [
-    "index",
-    "---Usage",
-    "usage",
-    "---Configuration",
-    "configuration",
-    "---API Reference",
-    "api",
-    "---Release Notes",
-    "release-notes"
-  ]
+  "pages": ["index", "demo", "---Usage", "usage", "---API Reference", "api"]
 }
