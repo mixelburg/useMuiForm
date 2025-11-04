@@ -157,7 +157,7 @@ export type MuiFormProviderProps<
     registerHtml: ReturnType<typeof useMuiForm<TFieldValues>>["registerHtml"];
   };
 
-export function FormProvider<TFieldValues extends FieldValues = FieldValues>(
+export function MuiFormProvider<TFieldValues extends FieldValues = FieldValues>(
   options: MuiFormProviderProps<TFieldValues>,
 ) {
   return <RHFFormProvider {...options} />;

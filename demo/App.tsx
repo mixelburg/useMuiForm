@@ -16,7 +16,7 @@ import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { FormProvider, useMuiForm, useMuiFormContext } from "@/src";
+import { MuiFormProvider, useMuiForm, useMuiFormContext } from "@/src";
 import { useFormContext, useWatch } from "react-hook-form";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
@@ -76,7 +76,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
   return (
     <Stack direction="row" spacing={2}>
       <Stack maxHeight={500} spacing={2}>
-        <FormProvider {...methods}>
+        <MuiFormProvider {...methods}>
         <Title/>
           <TextField
             label="name"
@@ -158,7 +158,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           <Button variant="contained" onClick={handleSubmit(submit)}>
             "SUBMIT"
           </Button>
-        </FormProvider>
+        </MuiFormProvider>
       </Stack>
       <JSONPretty data={state} />
     </Stack>
