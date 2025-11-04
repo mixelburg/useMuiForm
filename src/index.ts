@@ -97,7 +97,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     if (isCheckbox) {
       return {
         ...baseReturn,
-        defaultChecked: currentValue as boolean
+        defaultChecked: currentValue as boolean,
       } as RegisterMuiReturn<TFieldValues, Name>;
     }
 
@@ -109,7 +109,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
 
     return {
       ...baseReturn,
-      defaultValue: finalValue
+      defaultValue: finalValue,
     } as RegisterMuiReturn<TFieldValues, Name>;
   }
 

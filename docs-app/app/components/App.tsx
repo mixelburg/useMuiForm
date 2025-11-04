@@ -16,7 +16,7 @@ import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import {useMuiForm} from "usemuiform";
+import { useMuiForm } from "usemuiform";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
