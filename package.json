@@ -42,7 +42,6 @@
     "@types/node": "^24.6.1",
     "@types/react": "^19.1.1",
     "@types/react-dom": "^19.1.1",
-    "@vitejs/plugin-react": "^5.0.4",
     "dayjs": "^1.11.18",
     "husky": "^9.1.7",
     "jotai-location": "^0.6.2",

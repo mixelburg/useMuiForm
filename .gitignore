@@ -49,3 +49,5 @@ Thumbs.db
 dist
 
 docs-app/.source
+
+bun.lock
