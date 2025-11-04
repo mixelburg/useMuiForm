@@ -9,6 +9,7 @@
     "format": "biome check --write --unsafe"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.4"
+    "@biomejs/biome": "2.2.4",
+    "husky": "^9.1.7"
   }
 }
