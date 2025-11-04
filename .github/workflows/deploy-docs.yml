@@ -33,7 +33,7 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Install dependencies
-        run: cd docs-app && bun i
+        run: bun i
 
       - name: Build with Next.js
         run: cd docs-app && bun run build
