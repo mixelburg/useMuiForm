@@ -51,15 +51,9 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
   const {
     register: registerHtml,
     formState: { errors, defaultValues },
-    watch,
     setValue,
     trigger,
   } = methods;
-
-  // Check if we're in controlled mode (onChange) or uncontrolled mode (onBlur, onSubmit, etc.)
-  const isControlled = !options?.mode || options.mode === "onChange" || options.mode === "all";
-
-  // Store refs for all inputs to access their values in onBlur
 
   function register<Name extends Path<TFieldValues>>(
     name: Name,
@@ -68,7 +62,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     const field = registerHtml(name, regOptions);
     const err = get(errors, name);
     // Use watch for controlled mode to keep value in sync, getValues for uncontrolled
-    const currentValue = isControlled ? watch(name) : get(defaultValues, name);
+    const currentValue = get(defaultValues, name);
 
     // Check if this is a checkbox field (value is boolean)
     const isCheckbox = typeof currentValue === "boolean";
@@ -103,7 +97,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     if (isCheckbox) {
       return {
         ...baseReturn,
-        ...(isControlled ? { checked: currentValue as boolean } : { defaultChecked: currentValue as boolean }),
+        defaultChecked: currentValue as boolean
       } as RegisterMuiReturn<TFieldValues, Name>;
     }
 
@@ -115,7 +109,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
 
     return {
       ...baseReturn,
-      ...(isControlled ? { value: finalValue } : { defaultValue: finalValue }),
+      defaultValue: finalValue
     } as RegisterMuiReturn<TFieldValues, Name>;
   }
 
