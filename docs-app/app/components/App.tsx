@@ -3,6 +3,8 @@
 import {
   Button,
   Checkbox,
+  CssBaseline,
+  createTheme,
   FormControlLabel,
   FormGroup,
   FormHelperText,
@@ -11,6 +13,7 @@ import {
   Stack,
   Switch,
   TextField,
+  ThemeProvider,
 } from "@mui/material";
 import dayjs from "dayjs";
 import { type FC, useState } from "react";
@@ -183,24 +186,37 @@ const App: FC = () => {
   const [mode, setMode] = useState<DemoFormProps["mode"]>("onBlur");
 
   return (
-    <Stack height="100%" alignItems="center" justifyContent="center" component={Paper} spacing={2} padding={2}>
-      <TextField
-        select
-        label="Form Mode"
-        value={mode}
-        onChange={(e) => setMode(e.target.value as typeof mode)}
-        variant="outlined"
-        sx={{ width: 300 }}
-      >
-        <MenuItem value="onChange">onChange (Controlled)</MenuItem>
-        <MenuItem value="onBlur">onBlur</MenuItem>
-        <MenuItem value="onSubmit">onSubmit</MenuItem>
-        <MenuItem value="onTouched">onTouched</MenuItem>
-        <MenuItem value="all">all</MenuItem>
-      </TextField>
+    <ThemeProvider
+      theme={createTheme({
+        palette: {
+          mode: "dark",
+          text: {
+            // make it slightly darker that white to make it more readable
+            primary: "#cdcdcd",
+          },
+        },
+      })}
+    >
+      <CssBaseline />
+      <Stack height="750px" alignItems="center" component={Paper} spacing={2} padding={2}>
+        <TextField
+          select
+          label="Form Mode"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as typeof mode)}
+          variant="outlined"
+          sx={{ width: 300 }}
+        >
+          <MenuItem value="onChange">onChange (Controlled)</MenuItem>
+          <MenuItem value="onBlur">onBlur</MenuItem>
+          <MenuItem value="onSubmit">onSubmit</MenuItem>
+          <MenuItem value="onTouched">onTouched</MenuItem>
+          <MenuItem value="all">all</MenuItem>
+        </TextField>
 
-      <DemoForm key={mode} mode={mode} />
-    </Stack>
+        <DemoForm key={mode} mode={mode} />
+      </Stack>
+    </ThemeProvider>
   );
 };
 

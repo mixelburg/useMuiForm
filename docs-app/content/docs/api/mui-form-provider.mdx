@@ -1,0 +1,107 @@
+---
+title: MuiFormProvider Component
+description: API reference for the MuiFormProvider component
+---
+
+# MuiFormProvider
+
+The MUI-enhanced version of react-hook-form's `FormProvider`. Provides form context with MUI-enhanced `register` and `registerHtml` to child components.
+
+## Import
+
+```tsx
+import { MuiFormProvider } from 'usemuiform'
+```
+
+## Type Signature
+
+```tsx
+function MuiFormProvider<TFieldValues extends FieldValues = FieldValues>(
+  props: MuiFormProviderProps<TFieldValues>
+): JSX.Element
+
+type MuiFormProviderProps<TFieldValues> = {
+  children: React.ReactNode
+} & UseFormReturn<TFieldValues> & {
+  register: ReturnType<typeof useMuiForm<TFieldValues>>['register']
+  registerHtml: ReturnType<typeof useMuiForm<TFieldValues>>['registerHtml']
+}
+```
+
+## Props
+
+### children
+
+**Type**: `React.ReactNode`
+
+The child components that will have access to the form context.
+
+### ...methods
+
+All methods returned from `useMuiForm` should be spread into the provider:
+
+```tsx
+const methods = useMuiForm<FormState>({ /* options */ })
+
+<MuiFormProvider {...methods}>
+  {/* children */}
+</MuiFormProvider>
+```
+
+## Example
+
+```tsx
+import { useMuiForm, MuiFormProvider, useMuiFormContext } from 'usemuiform'
+import { TextField, Button, Stack } from '@mui/material'
+
+type FormState = {
+  email: string
+  name: string
+}
+
+// Child components use useMuiFormContext to access MUI-enhanced register
+function FormFields() {
+  const { register, registerHtml } = useMuiFormContext<FormState>()
+
+  return (
+    <Stack spacing={2}>
+      {/* MUI TextField with enhanced register */}
+      <TextField
+        label="Name"
+        {...register('name', { required: 'Name is required' })}
+      />
+
+      {/* Native input with registerHtml */}
+      <input
+        type="email"
+        placeholder="Email"
+        {...registerHtml('email', { required: 'Email is required' })}
+      />
+    </Stack>
+  )
+}
+
+// Parent component
+function MyForm() {
+  const methods = useMuiForm<FormState>({
+    defaultValues: { email: '', name: '' }
+  })
+
+  return (
+    <MuiFormProvider {...methods}>
+      <Stack component="form" spacing={2} onSubmit={methods.handleSubmit(console.log)}>
+        <FormFields />
+        <Button type="submit" variant="contained">Submit</Button>
+      </Stack>
+    </MuiFormProvider>
+  )
+}
+```
+
+
+## See Also
+
+- [useMuiForm](/docs/api/use-mui-form) - Main hook for form creation
+- [useMuiFormContext](/docs/api/use-mui-form-context) - Hook for accessing form context
+- [react-hook-form FormProvider](https://react-hook-form.com/docs/formprovider) - Original documentation
+

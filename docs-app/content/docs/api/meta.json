@@ -1,4 +1,4 @@
 {
   "title": "API Reference",
-  "pages": ["use-mui-form", "types"]
+  "pages": ["use-mui-form", "use-mui-form-context", "mui-form-provider", "types"]
 }

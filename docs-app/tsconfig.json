@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "usemuiform": ["../core/src/index.ts"]
+      "usemuiform": ["../core/src/index.tsx"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
