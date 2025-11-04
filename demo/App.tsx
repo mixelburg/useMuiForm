@@ -6,17 +6,17 @@ import {
   FormHelperText,
   MenuItem,
   Paper,
-  Select,
   Stack,
+  Switch,
   TextField,
-} from "@mui/material";
-import dayjs from "dayjs";
-import { type FC, useState } from "react";
-import JSONPretty from "react-json-pretty";
-import "react-json-pretty/themes/monikai.css";
-import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useMuiForm } from "@/src";
+} from '@mui/material'
+import dayjs from 'dayjs'
+import { type FC, useState } from 'react'
+import JSONPretty from 'react-json-pretty'
+import 'react-json-pretty/themes/monikai.css'
+import { DateTimeField, LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { useMuiForm } from '@/src'
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
@@ -24,6 +24,7 @@ type State = {
   role: Role;
   roles: Role[];
   racoon: boolean;
+  sure: boolean;
   birth: dayjs.Dayjs;
   person: {
     name: string;
@@ -42,6 +43,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
       email: "",
       role: "root",
       racoon: true,
+      sure: true,
       birth: dayjs(),
       person: {
         name: "ivan",
@@ -107,13 +109,20 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           ))}
         </TextField>
 
-        <Select multiple label="roles" variant="outlined" {...register("roles")} fullWidth>
+        <TextField
+          select
+          slotProps={{ select: { multiple: true } }}
+          label="roles"
+          variant="outlined"
+          {...register("roles")}
+          fullWidth
+        >
           {["root", "admin", "developer", "user", "guest"].map((role) => (
             <MenuItem key={role} value={role}>
               {role}
             </MenuItem>
           ))}
-        </Select>
+        </TextField>
 
         <FormGroup>
           {(() => {
@@ -121,6 +130,17 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
             return (
               <>
                 <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
+                <FormHelperText error={error}>{helperText}</FormHelperText>
+              </>
+            );
+          })()}
+        </FormGroup>
+        <FormGroup>
+          {(() => {
+            const { helperText, error, ...props } = register("racoon");
+            return (
+              <>
+                <FormControlLabel label="Are you a racoon?" control={<Switch {...props} />} />
                 <FormHelperText error={error}>{helperText}</FormHelperText>
               </>
             );
