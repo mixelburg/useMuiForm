@@ -9,6 +9,5 @@
     "sourceMap": true,
     "declaration": true,
     "noEmit": false
-  },
-  "include": ["src/**/*.ts"]
+  }
 }
