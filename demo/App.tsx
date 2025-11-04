@@ -16,7 +16,7 @@ import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { FormProvider, useMuiForm } from "@/src";
+import { FormProvider, useMuiForm, useMuiFormContext } from "@/src";
 import { useFormContext, useWatch } from "react-hook-form";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
@@ -166,7 +166,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
 };
 
 const Title: FC = () => {
-  const {control} = useFormContext<State>();
+  const {control} = useMuiFormContext<State>();
   
   const name = useWatch({ control, name: "person.name" });
   
