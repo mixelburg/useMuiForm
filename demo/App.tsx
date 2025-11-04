@@ -9,14 +9,14 @@ import {
   Stack,
   Switch,
   TextField,
-} from '@mui/material'
-import dayjs from 'dayjs'
-import { type FC, useState } from 'react'
-import JSONPretty from 'react-json-pretty'
-import 'react-json-pretty/themes/monikai.css'
-import { DateTimeField, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { useMuiForm } from '@/src'
+} from "@mui/material";
+import dayjs from "dayjs";
+import { type FC, useState } from "react";
+import JSONPretty from "react-json-pretty";
+import "react-json-pretty/themes/monikai.css";
+import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { useMuiForm } from "@/src";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
