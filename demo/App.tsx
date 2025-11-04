@@ -11,12 +11,13 @@ import {
   TextField,
 } from "@mui/material";
 import dayjs from "dayjs";
-import { type FC, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, useMuiForm } from "@/src";
+import { useFormContext, useWatch } from "react-hook-form";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
@@ -75,8 +76,8 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
   return (
     <Stack direction="row" spacing={2}>
       <Stack maxHeight={500} spacing={2}>
-        <h1>Hello World</h1>
         <FormProvider {...methods}>
+        <Title/>
           <TextField
             label="name"
             variant="outlined"
@@ -163,6 +164,14 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     </Stack>
   );
 };
+
+const Title: FC = () => {
+  const {control} = useFormContext<State>();
+  
+  const name = useWatch({ control, name: "person.name" });
+  
+  return <h1>Hello{name.length ? ',' : ''} {name}</h1>
+}
 
 const App: FC = () => {
   const [mode, setMode] = useState<DemoFormProps["mode"]>("onBlur");
