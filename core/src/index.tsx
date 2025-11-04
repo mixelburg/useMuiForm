@@ -22,20 +22,14 @@ type BaseRegisterMuiReturn<TName extends Path<any>> = {
 };
 
 type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
-  checked?: boolean;
   defaultChecked?: boolean;
-  value?: never;
-  defaultValue?: never;
 };
 
 type RegisterMuiReturnValue<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>,
 > = BaseRegisterMuiReturn<TName> & {
-  value?: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
   defaultValue?: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
-  checked?: never;
-  defaultChecked?: never;
 };
 
 type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
