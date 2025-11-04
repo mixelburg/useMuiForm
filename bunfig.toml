@@ -1,0 +1,3 @@
+# bunfig.toml
+[workspace]
+members = ["core", "docs-app"]

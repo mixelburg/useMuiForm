@@ -36,7 +36,7 @@ jobs:
         run: bun i
 
       - name: Build with Next.js
-        run: cd docs-app && bun run build
+        run: bun run --filter docs-app build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
