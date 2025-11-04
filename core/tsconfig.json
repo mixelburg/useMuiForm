@@ -28,11 +28,11 @@
     "alwaysStrict": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+    "baseUrl": "..",
     "paths": {
       "@/*": ["./*"]
     },
     "types": ["node"]
   },
-  "include": ["src", "demo"]
+  "include": ["./src", "demo"]
 }

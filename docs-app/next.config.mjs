@@ -16,7 +16,6 @@ const config = {
   },
   basePath: "/useMuiForm",
   assetPrefix: "/useMuiForm/",
-  outputFileTracingRoot: path.resolve(__dirname, "./"),
 };
 
 export default withMDX(config);
