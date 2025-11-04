@@ -16,6 +16,6 @@ bun add usemuiform
 
 ## 🚀 Demo
 
-[👉 Live Demo on StackBlitz](https://stackblitz.com/github/mixelburg/usemuiform?file=test%2FApp.tsx)
+[👉 Live Demo](https://mixelburg.github.io/useMuiForm/docs/demo)
 
 ---
