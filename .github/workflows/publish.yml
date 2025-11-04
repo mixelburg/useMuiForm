@@ -27,7 +27,7 @@ jobs:
         run: bun i
 
       - name: Build
-        run: bun run --filter core build
+        run: bun run --filter usemuiform build
 
       - name: Configure npm auth
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc

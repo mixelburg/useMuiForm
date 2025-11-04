@@ -36,7 +36,7 @@ jobs:
         run: bun i
 
       - name: Build with Next.js
-        run: bun run --filter docs-app build
+        run: bun run --filter usemuiform-docs build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
