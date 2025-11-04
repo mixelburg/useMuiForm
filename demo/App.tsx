@@ -16,7 +16,7 @@ import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useMuiForm } from "@/src";
+import { FormProvider, useMuiForm } from "@/src";
 
 type Role = "root" | "admin" | "developer" | "user" | "guest" | "";
 type State = {
@@ -37,7 +37,7 @@ type DemoFormProps = {
 };
 
 const DemoForm: FC<DemoFormProps> = ({ mode }) => {
-  const { register, handleSubmit } = useMuiForm<State>({
+  const methods = useMuiForm<State>({
     defaultValues: {
       roles: [],
       email: "",
@@ -52,7 +52,9 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     },
     mode,
   });
-
+  
+  const { register, handleSubmit } = methods;
+  
   const [state, setState] = useState<State>();
 
   const submit = async (data: State) => {
@@ -74,86 +76,88 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     <Stack direction="row" spacing={2}>
       <Stack maxHeight={500} spacing={2}>
         <h1>Hello World</h1>
-        <TextField
-          label="name"
-          variant="outlined"
-          {...register("person.name", { required: true })}
-          defaultValue={"maks"}
-        />
-
-        <TextField
-          label="email"
-          type="email"
-          variant="outlined"
-          {...register("email", {
-            validate: (value) => {
-              if (value.length < 5) {
-                return "Email must be at least 5 characters long";
-              }
-              if (!value.includes("@")) {
-                return "Email must contain @";
-              }
-              return;
-            },
-          })}
-          fullWidth
-        />
-
-        <TextField label="description" variant="outlined" {...register("description", {})} fullWidth />
-
-        <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
-          {["root", "admin", "developer", "user", "guest"].map((role) => (
-            <MenuItem key={role} value={role}>
-              {role}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          select
-          slotProps={{ select: { multiple: true } }}
-          label="roles"
-          variant="outlined"
-          {...register("roles")}
-          fullWidth
-        >
-          {["root", "admin", "developer", "user", "guest"].map((role) => (
-            <MenuItem key={role} value={role}>
-              {role}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <FormGroup>
-          {(() => {
-            const { helperText, error, ...checkboxProps } = register("racoon");
-            return (
-              <>
-                <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
-                <FormHelperText error={error}>{helperText}</FormHelperText>
-              </>
-            );
-          })()}
-        </FormGroup>
-        <FormGroup>
-          {(() => {
-            const { helperText, error, ...props } = register("racoon");
-            return (
-              <>
-                <FormControlLabel label="Are you a racoon?" control={<Switch {...props} />} />
-                <FormHelperText error={error}>{helperText}</FormHelperText>
-              </>
-            );
-          })()}
-        </FormGroup>
-
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateTimeField label="birth" {...birthProps} />
-        </LocalizationProvider>
-
-        <Button variant="contained" onClick={handleSubmit(submit)}>
-          "SUBMIT"
-        </Button>
+        <FormProvider {...methods}>
+          <TextField
+            label="name"
+            variant="outlined"
+            {...register("person.name", { required: true })}
+            defaultValue={"maks"}
+          />
+  
+          <TextField
+            label="email"
+            type="email"
+            variant="outlined"
+            {...register("email", {
+              validate: (value) => {
+                if (value.length < 5) {
+                  return "Email must be at least 5 characters long";
+                }
+                if (!value.includes("@")) {
+                  return "Email must contain @";
+                }
+                return;
+              },
+            })}
+            fullWidth
+          />
+  
+          <TextField label="description" variant="outlined" {...register("description", {})} fullWidth />
+  
+          <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
+            {["root", "admin", "developer", "user", "guest"].map((role) => (
+              <MenuItem key={role} value={role}>
+                {role}
+              </MenuItem>
+            ))}
+          </TextField>
+  
+          <TextField
+            select
+            slotProps={{ select: { multiple: true } }}
+            label="roles"
+            variant="outlined"
+            {...register("roles")}
+            fullWidth
+          >
+            {["root", "admin", "developer", "user", "guest"].map((role) => (
+              <MenuItem key={role} value={role}>
+                {role}
+              </MenuItem>
+            ))}
+          </TextField>
+  
+          <FormGroup>
+            {(() => {
+              const { helperText, error, ...checkboxProps } = register("racoon");
+              return (
+                <>
+                  <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
+                  <FormHelperText error={error}>{helperText}</FormHelperText>
+                </>
+              );
+            })()}
+          </FormGroup>
+          <FormGroup>
+            {(() => {
+              const { helperText, error, ...props } = register("racoon");
+              return (
+                <>
+                  <FormControlLabel label="Are you a racoon?" control={<Switch {...props} />} />
+                  <FormHelperText error={error}>{helperText}</FormHelperText>
+                </>
+              );
+            })()}
+          </FormGroup>
+  
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimeField label="birth" {...birthProps} />
+          </LocalizationProvider>
+  
+          <Button variant="contained" onClick={handleSubmit(submit)}>
+            "SUBMIT"
+          </Button>
+        </FormProvider>
       </Stack>
       <JSONPretty data={state} />
     </Stack>

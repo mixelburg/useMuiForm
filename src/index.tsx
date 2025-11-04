@@ -7,15 +7,17 @@ import {
   type RegisterOptions,
   type UseFormProps,
   useForm,
+  FormProvider as RHFFormProvider,
+  UseFormReturn,
 } from "react-hook-form";
 
 type BaseRegisterMuiReturn<TName extends Path<any>> = {
   name: TName;
-  onChange?: (event: any) => void;
-  onBlur: (event: any) => void;
+  onChange: (event: unknown) => Promise<boolean>;
+  onBlur: (event: any) => Promise<boolean>;
   error: boolean;
   helperText: string;
-  inputRef: (instance: any) => void;
+  ref: (instance: any) => void;
 };
 
 type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
@@ -68,7 +70,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
     const isCheckbox = typeof currentValue === "boolean";
 
     // Wrap onChange to handle different event types
-    const wrappedOnChange = (event: unknown) => {
+    const wrappedOnChange = async (event: unknown) => {
       if (isChangeEvent(event)) {
         event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
         field.onChange(event);
@@ -76,13 +78,17 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
         setValue(name, event as PathValue<TFieldValues, Name>);
         trigger(name);
       }
+      
+      return true;
     };
 
-    const wrappedOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const wrappedOnBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
       if (event?.target?.value !== undefined) {
         event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
         field.onBlur(event);
       }
+      
+      return true;
     };
 
     const baseReturn: BaseRegisterMuiReturn<Name> = {
@@ -91,7 +97,7 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
       onBlur: wrappedOnBlur,
       error: !!err,
       helperText: (err?.message as string) || "",
-      inputRef: field.ref,
+      ref: field.ref,
     };
 
     if (isCheckbox) {
@@ -114,4 +120,15 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(optio
   }
 
   return { ...methods, register, registerHtml };
+}
+
+export type MuiFormProviderProps<TFieldValues extends FieldValues = FieldValues> = {
+  children: React.ReactNode;
+} & UseFormReturn<TFieldValues> & {
+  register: ReturnType<typeof useMuiForm<TFieldValues>>["register"];
+  registerHtml: ReturnType<typeof useMuiForm<TFieldValues>>["registerHtml"];
+};
+
+export function FormProvider<TFieldValues extends FieldValues = FieldValues>(options: MuiFormProviderProps<TFieldValues>) {
+  return <RHFFormProvider {...options}/>
 }
