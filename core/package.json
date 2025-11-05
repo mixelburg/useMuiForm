@@ -4,11 +4,7 @@
   "description": "",
   "main": "../dist/index.js",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
-    "dev": "rsbuild dev",
-    "docs:dev": "cd ../docs-app && npm run dev",
-    "docs:build": "cd ../docs-app && npm run build",
-    "docs:install": "cd ../docs-app && npm install"
+    "build": "tsc --build tsconfig.build.json"
   },
   "author": "mixelburg",
   "license": "ISC",
@@ -25,7 +21,7 @@
     "typescript"
   ],
   "files": [
-    "../dist"
+    "dist"
   ],
   "devDependencies": {
     "@rsbuild/core": "^1.5.13",
