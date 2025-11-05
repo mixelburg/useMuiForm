@@ -2,7 +2,8 @@
   "name": "usemuiform",
   "version": "5.5.0",
   "description": "",
-  "main": "../dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
