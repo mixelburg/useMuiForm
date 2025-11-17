@@ -60,7 +60,7 @@ register('address.city')    // Deeply nested field
 
 #### Return Value
 
-**This is what makes useMuiForm unique** - instead of standard HTML props, you get MUI-compatible props:
+**This is what makes useMuiForm unique** - instead of standard HTML props, you get MUI-compatible props that are **fully controlled** by react-hook-form:
 
 ```tsx
 {
@@ -72,19 +72,19 @@ register('address.city')    // Deeply nested field
   inputRef: RefObject    // React ref for the input
 
   // For non-boolean fields:
-  value?: any            // Current value (controlled mode)
-  defaultValue?: any     // Initial value (uncontrolled mode)
+  value: any             // Current value (controlled)
 
-  // For boolean fields (checkboxes):
-  checked?: boolean      // Current checked state (controlled mode)
-  defaultChecked?: boolean // Initial checked state (uncontrolled mode)
+  // For boolean fields (checkboxes, switches):
+  checked: boolean       // Current checked state (controlled)
 }
 ```
 
+Under the hood, `register` uses `watch(name)` from react-hook-form to derive the current value for the field, so the `value` / `checked` props stay in sync with the form state in real time (including `reset`, `setValue`, etc.).
+
 The key differences from react-hook-form's `register`:
 - Returns `error` (boolean) and `helperText` (string) instead of requiring you to access `formState.errors`
-- Automatically handles MUI's `checked`/`defaultChecked` for checkbox components
-- The `onChange` handler works with both MUI events and direct values
+- Always provides **controlled** `value`/`checked` props suitable for MUI components
+- The `onChange` handler works with both MUI events and direct values (e.g. `onChange(value)` from pickers)
 
 ### registerHtml
 
@@ -116,6 +116,8 @@ All other react-hook-form methods are available unchanged:
 
 ## Example
 
+The basic usage remains the same, but now components receive controlled `value`/`checked` props automatically:
+
 ```tsx
 import { useMuiForm } from 'usemuiform'
 import { TextField, Button, Stack } from '@mui/material'
@@ -126,7 +128,7 @@ type FormState = {
 }
 
 function MyForm() {
-  const { register, handleSubmit } = useMuiForm<FormState>({
+  const { register, handleSubmit, reset } = useMuiForm<FormState>({
     defaultValues: { email: '', name: '' }
   })
 
@@ -152,9 +154,14 @@ function MyForm() {
         {...register('name', { required: 'Name is required' })}
       />
 
-      <Button variant="contained" onClick={handleSubmit(onSubmit)}>
-        Submit
-      </Button>
+      <Stack direction="row" spacing={1}>
+        <Button variant="contained" onClick={handleSubmit(onSubmit)}>
+          Submit
+        </Button>
+        <Button variant="text" onClick={() => reset()}>
+          Reset
+        </Button>
+      </Stack>
     </Stack>
   )
 }

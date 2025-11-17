@@ -33,15 +33,10 @@ type RegisterMuiReturnValue<TFieldValues, TName> = {
   helperText: string
   inputRef: (instance: any) => void
 
-  // Controlled mode (mode: 'onChange' or 'all')
   value?: PathValue<TFieldValues, TName>
-
-  // Uncontrolled mode (mode: 'onBlur' or 'onSubmit')
-  defaultValue?: PathValue<TFieldValues, TName>
 
   // Never present for non-boolean fields
   checked?: never
-  defaultChecked?: never
 }
 ```
 
@@ -58,15 +53,10 @@ type RegisterMuiReturnBoolean<TName> = {
   helperText: string
   inputRef: (instance: any) => void
 
-  // Controlled mode (mode: 'onChange' or 'all')
   checked?: boolean
-
-  // Uncontrolled mode (mode: 'onBlur' or 'onSubmit')
-  defaultChecked?: boolean
 
   // Never present for boolean fields
   value?: never
-  defaultValue?: never
 }
 ```
 

@@ -5,11 +5,11 @@ description: How to use useMuiForm with different Material-UI components
 
 # Using with MUI Components
 
-useMuiForm's `register` function automatically provides the correct props for MUI components. Here's how to use it with common MUI inputs.
+useMuiForm's `register` function automatically provides the correct **controlled** props for MUI components. Here's how to use it with common MUI inputs.
 
 ## TextField
 
-The most common use case - works with all TextField variants:
+The most common use case - works with all TextField variants using controlled `value`/`onChange`:
 
 ```tsx
 import { useMuiForm } from 'usemuiform'
@@ -87,7 +87,7 @@ type FormState = {
 
 ## Checkbox
 
-Checkboxes need special handling - extract `helperText` and `error` separately:
+Checkboxes are also controlled; `register` returns a `checked` prop along with `helperText` and `error`:
 
 ```tsx
 import { FormControlLabel, Checkbox, FormHelperText, FormGroup } from '@mui/material'
@@ -119,7 +119,7 @@ Or simpler without helper text:
 
 ## Switch
 
-Same pattern as Checkbox:
+Same pattern as Checkbox (controlled `checked` state):
 
 ```tsx
 import { FormControlLabel, Switch } from '@mui/material'
@@ -132,7 +132,7 @@ import { FormControlLabel, Switch } from '@mui/material'
 
 ## DatePicker (MUI X)
 
-Works with MUI X date pickers:
+Works with MUI X date pickers. `register` wires the picker up as a controlled component (the picker typically calls `onChange(value)` rather than passing a DOM event):
 
 ```tsx
 import { DatePicker } from '@mui/x-date-pickers'
@@ -198,4 +198,3 @@ type FormState = {
   {...register('person.email', { required: 'Email is required' })}
 />
 ```
-
