@@ -56,7 +56,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     mode,
   });
 
-  const { register, handleSubmit } = methods;
+  const { register, handleSubmit, reset } = methods;
 
   const [state, setState] = useState<State>();
 
@@ -75,17 +75,16 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     },
   });
 
+  const onReset = () => {
+    reset();
+  };
+
   return (
     <Stack direction="row" spacing={2}>
-      <Stack maxHeight={500} spacing={2}>
+      <Stack spacing={2}>
         <MuiFormProvider {...methods}>
           <Title />
-          <TextField
-            label="name"
-            variant="outlined"
-            {...register("person.name", { required: true })}
-            defaultValue={"maks"}
-          />
+          <TextField label="name" variant="outlined" {...register("person.name", { required: true })} />
 
           <TextField
             label="email"
@@ -157,8 +156,11 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
             <DateTimeField label="birth" {...birthProps} />
           </LocalizationProvider>
 
+          <Button variant="outlined" onClick={onReset}>
+            RESET
+          </Button>
           <Button variant="contained" onClick={handleSubmit(submit)}>
-            "SUBMIT"
+            SUBMIT
           </Button>
         </MuiFormProvider>
       </Stack>
@@ -183,7 +185,7 @@ const App: FC = () => {
   const [mode, setMode] = useState<DemoFormProps["mode"]>("onBlur");
 
   return (
-    <Stack height="750px" alignItems="center" component={Paper} spacing={2} padding={2}>
+    <Stack height="800px" alignItems="center" component={Paper} spacing={2} padding={2}>
       <TextField
         select
         label="Form Mode"

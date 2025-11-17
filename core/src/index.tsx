@@ -18,18 +18,20 @@ type BaseRegisterMuiReturn<TName extends Path<any>> = {
   onBlur: (event: any) => Promise<boolean>;
   error: boolean;
   helperText: string;
-  ref: (instance: any) => void;
+  inputRef: (instance: any) => void;
 };
 
 type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
-  defaultChecked?: boolean;
+  /** Controlled checked state for MUI Checkbox/Switch */
+  checked: boolean;
 };
 
 type RegisterMuiReturnValue<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>,
 > = BaseRegisterMuiReturn<TName> & {
-  defaultValue?: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
+  /** Controlled value for MUI text-like inputs */
+  value: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
 };
 
 type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
@@ -46,9 +48,10 @@ const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => 
 function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseFormReturn<TFieldValues>) {
   const {
     register: registerHtml,
-    formState: { errors, defaultValues },
+    formState: { errors },
     setValue,
     trigger,
+    watch,
   } = methods;
 
   function register<Name extends Path<TFieldValues>>(
@@ -57,7 +60,9 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
   ): RegisterMuiReturn<TFieldValues, Name> {
     const field = registerHtml(name, regOptions);
     const err = get(errors, name);
-    const currentValue = get(defaultValues, name);
+
+    // Use watch so the returned value/checked stays in sync with RHF state reactively.
+    const currentValue = watch(name);
     const isCheckbox = typeof currentValue === "boolean";
 
     const wrappedOnChange = async (event: unknown) => {
@@ -85,24 +90,21 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
       onBlur: wrappedOnBlur,
       error: !!err,
       helperText: (err?.message as string) || "",
-      ref: field.ref,
+      inputRef: field.ref,
     };
 
     if (isCheckbox) {
       return {
         ...baseReturn,
-        defaultChecked: currentValue as boolean,
+        checked: (currentValue as boolean | undefined) ?? false,
       } as RegisterMuiReturn<TFieldValues, Name>;
     }
 
-    const finalValue =
-      currentValue !== undefined
-        ? currentValue
-        : ((typeof currentValue === "string" ? "" : currentValue) as PathValue<TFieldValues, Name>);
+    const finalValue = currentValue !== undefined ? currentValue : ("" as unknown as PathValue<TFieldValues, Name>);
 
     return {
       ...baseReturn,
-      defaultValue: finalValue,
+      value: finalValue,
     } as RegisterMuiReturn<TFieldValues, Name>;
   }
 
@@ -121,7 +123,7 @@ export function useMuiFormContext<TFieldValues extends FieldValues = FieldValues
 
 export type MuiFormProviderProps<TFieldValues extends FieldValues = FieldValues> = {
   children: React.ReactNode;
-} & UseFormReturn<TFieldValues> & {
+} & Omit<UseFormReturn<TFieldValues>, "register"> & {
     register: ReturnType<typeof useMuiForm<TFieldValues>>["register"];
     registerHtml: ReturnType<typeof useMuiForm<TFieldValues>>["registerHtml"];
   };
@@ -129,5 +131,5 @@ export type MuiFormProviderProps<TFieldValues extends FieldValues = FieldValues>
 export function MuiFormProvider<TFieldValues extends FieldValues = FieldValues>(
   options: MuiFormProviderProps<TFieldValues>,
 ) {
-  return <RHFFormProvider {...options} />;
+  return <RHFFormProvider {...options} register={options.registerHtml} />;
 }
