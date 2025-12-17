@@ -67,8 +67,12 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
 
     const wrappedOnChange = async (event: unknown) => {
       if (isChangeEvent(event)) {
-        event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
-        field.onChange(event);
+        if (isCheckbox) {
+          setValue(name, event.target.checked as PathValue<TFieldValues, Name>);
+          trigger(name);
+        } else {
+          field.onChange(event);
+        }
       } else {
         setValue(name, event as PathValue<TFieldValues, Name>);
         trigger(name);
