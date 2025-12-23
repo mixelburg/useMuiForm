@@ -16,8 +16,6 @@ import dayjs from "dayjs";
 import { type FC, useState } from "react";
 import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
-import { DateTimeField, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useWatch } from "react-hook-form";
 import { MuiFormProvider, useMuiForm, useMuiFormContext } from "usemuiform";
 
@@ -64,16 +62,16 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
     setState(data);
   };
 
-  const birthProps = register("birth", {
-    required: true,
-    validate: (_value) => {
-      const year2000 = dayjs().year(2000);
-      if (_value.isBefore(year2000)) {
-        return "birth date must be after 2000";
-      }
-      return true;
-    },
-  });
+  // const birthProps = register("birth", {
+  //   required: true,
+  //   validate: (_value) => {
+  //     const year2000 = dayjs().year(2000);
+  //     if (_value.isBefore(year2000)) {
+  //       return "birth date must be after 2000";
+  //     }
+  //     return true;
+  //   },
+  // });
 
   const onReset = () => {
     reset();
@@ -84,50 +82,50 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
       <Stack spacing={2}>
         <MuiFormProvider {...methods}>
           <Title />
-          <TextField label="name" variant="outlined" {...register("person.name", { required: true })} />
+          {/*<TextField label="name" variant="outlined" {...register("person.name", { required: true })} />*/}
 
-          <TextField
-            label="email"
-            type="email"
-            variant="outlined"
-            {...register("email", {
-              validate: (value) => {
-                if (value.length < 5) {
-                  return "Email must be at least 5 characters long";
-                }
-                if (!value.includes("@")) {
-                  return "Email must contain @";
-                }
-                return;
-              },
-            })}
-            fullWidth
-          />
+          {/*<TextField*/}
+          {/*  label="email"*/}
+          {/*  type="email"*/}
+          {/*  variant="outlined"*/}
+          {/*  {...register("email", {*/}
+          {/*    validate: (value) => {*/}
+          {/*      if (value.length < 5) {*/}
+          {/*        return "Email must be at least 5 characters long";*/}
+          {/*      }*/}
+          {/*      if (!value.includes("@")) {*/}
+          {/*        return "Email must contain @";*/}
+          {/*      }*/}
+          {/*      return;*/}
+          {/*    },*/}
+          {/*  })}*/}
+          {/*  fullWidth*/}
+          {/*/>*/}
 
-          <TextField label="description" variant="outlined" {...register("description", {})} fullWidth />
+          {/*<TextField label="description" variant="outlined" {...register("description", {})} fullWidth />*/}
 
-          <TextField select label="role" variant="outlined" {...register("role")} fullWidth>
-            {["root", "admin", "developer", "user", "guest"].map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
-              </MenuItem>
-            ))}
-          </TextField>
+          {/*<TextField select label="role" variant="outlined" {...register("role")} fullWidth>*/}
+          {/*  {["root", "admin", "developer", "user", "guest"].map((role) => (*/}
+          {/*    <MenuItem key={role} value={role}>*/}
+          {/*      {role}*/}
+          {/*    </MenuItem>*/}
+          {/*  ))}*/}
+          {/*</TextField>*/}
 
-          <TextField
-            select
-            slotProps={{ select: { multiple: true } }}
-            label="roles"
-            variant="outlined"
-            {...register("roles")}
-            fullWidth
-          >
-            {["root", "admin", "developer", "user", "guest"].map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
-              </MenuItem>
-            ))}
-          </TextField>
+          {/*<TextField*/}
+          {/*  select*/}
+          {/*  slotProps={{ select: { multiple: true } }}*/}
+          {/*  label="roles"*/}
+          {/*  variant="outlined"*/}
+          {/*  {...register("roles")}*/}
+          {/*  fullWidth*/}
+          {/*>*/}
+          {/*  {["root", "admin", "developer", "user", "guest"].map((role) => (*/}
+          {/*    <MenuItem key={role} value={role}>*/}
+          {/*      {role}*/}
+          {/*    </MenuItem>*/}
+          {/*  ))}*/}
+          {/*</TextField>*/}
 
           <FormGroup>
             {(() => {
@@ -152,9 +150,9 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
             })()}
           </FormGroup>
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimeField label="birth" {...birthProps} />
-          </LocalizationProvider>
+          {/*<LocalizationProvider dateAdapter={AdapterDayjs}>*/}
+          {/*  <DateTimeField label="birth" {...birthProps} />*/}
+          {/*</LocalizationProvider>*/}
 
           <Button variant="outlined" onClick={onReset}>
             RESET

@@ -68,8 +68,13 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
     const wrappedOnChange = async (event: unknown) => {
       if (isChangeEvent(event)) {
         if (isCheckbox) {
-          setValue(name, event.target.checked as PathValue<TFieldValues, Name>);
-          trigger(name);
+          field.onChange({
+            target: {
+              name,
+              checked: event.target.checked as PathValue<TFieldValues, Name>,
+              type: "checkbox",
+            },
+          });
         } else {
           field.onChange(event);
         }
@@ -82,8 +87,22 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
 
     const wrappedOnBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
       if (event?.target?.value !== undefined) {
-        event.target.value = (isCheckbox ? event.target.checked : event.target.value) as string;
-        field.onBlur(event);
+        if (isCheckbox) {
+          field.onBlur({
+            target: {
+              name,
+              checked: event.target.checked as PathValue<TFieldValues, Name>,
+              type: "checkbox",
+            },
+          });
+        } else {
+          field.onBlur({
+            target: {
+              name,
+              value: event.target.value as PathValue<TFieldValues, Name>,
+            },
+          });
+        }
       }
       return true;
     };
