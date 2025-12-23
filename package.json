@@ -12,5 +12,5 @@
     "@biomejs/biome": "2.2.4",
     "husky": "^9.1.7"
   },
-  "version": "5.7.0"
+  "version": "5.9.0"
 }
