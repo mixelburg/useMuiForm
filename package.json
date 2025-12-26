@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "format": "biome check --write --unsafe"
+    "format": "bunx biome check --write --unsafe"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
