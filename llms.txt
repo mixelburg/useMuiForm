@@ -1,0 +1,73 @@
+# useMuiForm
+
+> A lightweight React hook that wraps react-hook-form to provide seamless MUI (Material-UI) component integration. Version 5.9.0.
+
+useMuiForm eliminates the boilerplate of connecting MUI inputs to react-hook-form. Its `register()` function returns props you can spread directly onto MUI components — including `error` and `helperText` for TextField, and `checked` for Checkbox/Switch — while maintaining full access to all react-hook-form features.
+
+## Installation
+
+```bash
+bun add usemuiform
+# or: npm install usemuiform / yarn add usemuiform / pnpm add usemuiform
+```
+
+Peer dependencies: `react`, `react-hook-form`, `@mui/material`, `lodash`.
+
+## API
+
+### useMuiForm(options?)
+
+Drop-in replacement for react-hook-form's `useForm`. Accepts the same `UseFormProps<TFieldValues>` options. Returns all standard `UseFormReturn` methods plus an enhanced `register()` and the original `registerHtml`.
+
+### useMuiFormContext()
+
+Context-based variant of `useMuiForm` — use inside components wrapped by `MuiFormProvider` to access the enhanced form methods without prop drilling.
+
+### MuiFormProvider
+
+A wrapper around react-hook-form's `FormProvider`. Pass the return value of `useMuiForm()` as props along with `children`.
+
+### register(name, options?)
+
+The enhanced register function. Returns an object you can spread onto MUI components:
+
+- `name` — field name
+- `onChange` — change handler (supports both DOM events and direct values like Autocomplete)
+- `onBlur` — blur handler
+- `inputRef` — ref callback for the input element
+- `error: boolean` — whether the field has a validation error
+- `helperText: string` — the validation error message (empty string if none)
+- `value` — current field value (for text-like inputs)
+- `checked: boolean` — current checked state (auto-detected when the field value is boolean, for Checkbox/Switch)
+
+## Quick Example
+
+```tsx
+import { useMuiForm } from "usemuiform";
+import { TextField, Button } from "@mui/material";
+
+type FormData = { email: string; password: string };
+
+function LoginForm() {
+  const { register, handleSubmit } = useMuiForm<FormData>();
+
+  return (
+    <form onSubmit={handleSubmit((data) => console.log(data))}>
+      <TextField label="Email" {...register("email", { required: "Email is required" })} />
+      <TextField label="Password" type="password" {...register("password", { required: "Password is required" })} />
+      <Button type="submit">Login</Button>
+    </form>
+  );
+}
+```
+
+## Docs
+
+- [Documentation](https://mixelburg.github.io/useMuiForm): Comprehensive guides, API reference, and examples
+- [Live Demo](https://mixelburg.github.io/useMuiForm/docs/demo): Interactive demo
+- [GitHub](https://github.com/mixelburg/useMuiForm): Source code and issues
+
+## Optional
+
+- [react-hook-form docs](https://react-hook-form.com/): Underlying form library — useMuiForm passes through all its options and methods
+- [MUI TextField API](https://mui.com/material-ui/api/text-field/): The primary MUI component useMuiForm targets
