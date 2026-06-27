@@ -1,0 +1,8 @@
+# Encrypt infra secrets to the team age recipients below.
+# Add a new line under `age:` for each machine/person that needs access, then re-encrypt:
+#   sops updatekeys secrets/infra.enc.env
+creation_rules:
+  - path_regex: secrets/.*\.enc\.env$
+    key_groups:
+      - age:
+          - age1587zqwk80ux5k94u9x22f9lvscaawksl6gzayp8xafyjh76a5p6qjmd6pv

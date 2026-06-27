@@ -36,6 +36,16 @@ Prefer a specific subagent type over `general-purpose`. Run independent agents i
 
 Stay in-line for: editing 1–3 files with clear instructions, running a known build/lint command, routine Read/Edit/Write.
 
+## Infra Credentials (SOPS + age)
+
+Secrets live encrypted-at-rest in `secrets/infra.enc.env` (committed) using [SOPS](https://github.com/getsops/sops) + an [age](https://github.com/FiloSottile/age) key. The encrypted file syncs via git; only the per-machine private age key is local. No daemon, no vault.
+- **Current keys:** `GH_TOKEN`, `GITHUB_TOKEN` (the GitHub PAT, same value under both names so `gh`/git/CI pick it up).
+- **Use a secret = wrap the command:** `sops exec-env secrets/infra.enc.env '<cmd>'` exports all keys for `<cmd>`. E.g. `sops exec-env secrets/infra.enc.env 'git push'` or `... 'gh pr create'`. Single value inline: `sops -d --extract '["GH_TOKEN"]' secrets/infra.enc.env`.
+- **age private key** (auto-detected by sops, no env var): macOS → `~/Library/Application Support/sops/age/keys.txt`; Linux → `~/.config/sops/age/keys.txt`. `chmod 600`, never commit it. "no master key" / "no identity" = key missing or wrong path.
+- **Onboard a machine/person:** `age-keygen -o <keyfile>`, add the printed `age1…` recipient to `.sops.yaml` under `age:`, then `sops updatekeys secrets/infra.enc.env` and commit. They drop their private key at the path above.
+- **Add / rotate a secret:** `sops secrets/infra.enc.env` opens the decrypted file in `$EDITOR`; save to re-encrypt.
+- Day-to-day pushes use SSH (`origin` is `git@github.com:…`), so the token isn't needed for those — it's here for HTTPS/`gh`/CI use.
+
 ## docs-app UI
 
 The docs site uses MUI 7. For user-facing UI work there, invoke the matching `impeccable` skill during implementation and a `polish` pass before done. Make it work and look good on mobile (verify at 375px); touch targets ≥ 44×44px. Library/`core` changes that don't render UI are exempt.

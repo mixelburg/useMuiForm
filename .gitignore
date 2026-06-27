@@ -48,6 +48,10 @@ Thumbs.db
 
 dist
 
+# Plaintext secrets — only the *.enc.env (SOPS-encrypted) form is committed
+secrets/*.plain.env
+secrets/*.dec.env
+
 docs-app/.source
 
 bun.lock
