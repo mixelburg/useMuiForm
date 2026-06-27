@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
@@ -28,11 +28,7 @@
     "alwaysStrict": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "..",
-    "paths": {
-      "@/*": ["./*"]
-    },
     "types": ["node"]
   },
-  "include": ["./src", "demo"]
+  "include": ["./src"]
 }

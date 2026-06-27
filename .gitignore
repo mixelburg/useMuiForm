@@ -47,6 +47,7 @@ Thumbs.db
 *.wmv
 
 dist
+*.tsbuildinfo
 
 # Plaintext secrets — only the *.enc.env (SOPS-encrypted) form is committed
 secrets/*.plain.env
