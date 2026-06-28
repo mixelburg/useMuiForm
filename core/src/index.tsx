@@ -45,6 +45,19 @@ type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFie
   ? RegisterMuiReturnBoolean<TName>
   : RegisterMuiReturnValue<TFieldValues, TName>;
 
+type MuiRegisterOptions<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = RegisterOptions<
+  TFieldValues,
+  TName
+> & {
+  /**
+   * Mark this field as a checkbox/switch so `register` returns `checked` (boolean)
+   * instead of `value`, regardless of the current value. Prefer this over relying on
+   * the legacy `typeof value === "boolean"` auto-detection, which silently breaks when
+   * the boolean isn't seeded in `defaultValues`.
+   */
+  type?: "checkbox";
+};
+
 const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => {
   return (v as React.ChangeEvent<HTMLInputElement>)?.target?.value !== undefined;
 };
@@ -54,15 +67,26 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
 
   function register<Name extends Path<TFieldValues>>(
     name: Name,
-    regOptions?: RegisterOptions<TFieldValues, Name>,
-  ): RegisterMuiReturn<TFieldValues, Name> {
-    const field = registerHtml(name, regOptions);
+    regOptions: MuiRegisterOptions<TFieldValues, Name> & { type: "checkbox" },
+  ): RegisterMuiReturnBoolean<Name>;
+  function register<Name extends Path<TFieldValues>>(
+    name: Name,
+    regOptions?: MuiRegisterOptions<TFieldValues, Name>,
+  ): RegisterMuiReturn<TFieldValues, Name>;
+  function register<Name extends Path<TFieldValues>>(
+    name: Name,
+    regOptions?: MuiRegisterOptions<TFieldValues, Name>,
+  ): RegisterMuiReturnBoolean<Name> | RegisterMuiReturnValue<TFieldValues, Name> {
+    // `type` is our own option; strip it before handing the rest to react-hook-form.
+    const { type, ...rhfOptions } = regOptions ?? {};
+    const field = registerHtml(name, rhfOptions as RegisterOptions<TFieldValues, Name>);
     // Pass formState so getFieldState subscribes to errors and re-renders on error changes.
     const err = getFieldState(name, formState).error;
 
     // Use watch so the returned value/checked stays in sync with RHF state reactively.
     const currentValue = watch(name);
-    const isCheckbox = typeof currentValue === "boolean";
+    // Explicit type: "checkbox" wins; otherwise fall back to inferring from a boolean value.
+    const isCheckbox = type === "checkbox" || typeof currentValue === "boolean";
 
     const wrappedOnChange = (event: unknown) => {
       if (isChangeEvent(event)) {
@@ -117,7 +141,7 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
       return {
         ...baseReturn,
         checked: (currentValue as boolean | undefined) ?? false,
-      } as RegisterMuiReturn<TFieldValues, Name>;
+      } as RegisterMuiReturnBoolean<Name>;
     }
 
     // Fall back to "" when empty so MUI inputs stay controlled (see RegisterMuiReturnValue.value).
@@ -126,7 +150,7 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
     return {
       ...baseReturn,
       value: finalValue,
-    } as RegisterMuiReturn<TFieldValues, Name>;
+    } as RegisterMuiReturnValue<TFieldValues, Name>;
   }
 
   return { ...methods, register, registerHtml };

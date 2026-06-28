@@ -82,8 +82,8 @@ function MyForm() {
   const emailProps = register('email')
   // emailProps has: value, error, helperText, etc.
 
-  // TypeScript infers RegisterMuiReturnBoolean for boolean field
-  const subscribeProps = register('subscribe')
+  // Pass { type: 'checkbox' } to get RegisterMuiReturnBoolean
+  const subscribeProps = register('subscribe', { type: 'checkbox' })
   // subscribeProps has: checked, error, helperText, etc.
 
   return (
@@ -257,7 +257,7 @@ function TypedForm() {
         })}
       />
       <FormControlLabel
-        control={<Checkbox {...register('acceptTerms')} />}
+        control={<Checkbox {...register('acceptTerms', { type: 'checkbox' })} />}
         label="Accept Terms"
       />
     </form>

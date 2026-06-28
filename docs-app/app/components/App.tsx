@@ -129,7 +129,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
 
           <FormGroup>
             {(() => {
-              const { helperText, error, ...checkboxProps } = register("racoon");
+              const { helperText, error, ...checkboxProps } = register("racoon", { type: "checkbox" });
               return (
                 <>
                   <FormControlLabel label="Are you a racoon?" control={<Checkbox {...checkboxProps} />} />
@@ -140,7 +140,7 @@ const DemoForm: FC<DemoFormProps> = ({ mode }) => {
           </FormGroup>
           <FormGroup>
             {(() => {
-              const { helperText, error, ...props } = register("sure");
+              const { helperText, error, ...props } = register("sure", { type: "checkbox" });
               return (
                 <>
                   <FormControlLabel label="Are you sure?" control={<Switch {...props} />} />
