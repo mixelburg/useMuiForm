@@ -1,4 +1,3 @@
-import { get } from "lodash";
 import React from "react";
 import {
   type FieldValues,
@@ -51,20 +50,15 @@ const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => 
 };
 
 function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseFormReturn<TFieldValues>) {
-  const {
-    register: registerHtml,
-    formState: { errors },
-    setValue,
-    trigger,
-    watch,
-  } = methods;
+  const { register: registerHtml, formState, getFieldState, setValue, trigger, watch } = methods;
 
   function register<Name extends Path<TFieldValues>>(
     name: Name,
     regOptions?: RegisterOptions<TFieldValues, Name>,
   ): RegisterMuiReturn<TFieldValues, Name> {
     const field = registerHtml(name, regOptions);
-    const err = get(errors, name);
+    // Pass formState so getFieldState subscribes to errors and re-renders on error changes.
+    const err = getFieldState(name, formState).error;
 
     // Use watch so the returned value/checked stays in sync with RHF state reactively.
     const currentValue = watch(name);

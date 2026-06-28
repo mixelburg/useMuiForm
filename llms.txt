@@ -11,7 +11,7 @@ bun add usemuiform
 # or: npm install usemuiform / yarn add usemuiform / pnpm add usemuiform
 ```
 
-Peer dependencies: `react`, `react-hook-form`, `@mui/material`, `lodash`.
+Peer dependencies: `react`, `react-hook-form`, `@mui/material`.
 
 ## API
 
