@@ -176,6 +176,36 @@ import { DateTimeField } from '@mui/x-date-pickers'
 />
 ```
 
+## Transforming values
+
+When the stored model value differs from the value the component wants (e.g. you
+store a `"YYYY-MM"` string but a month picker works with a dayjs object), pass a
+`transform`. `input` maps the stored value → the component on read; `output` maps
+the component value → the stored value on change. This replaces the `<Controller>`
+boilerplate you'd otherwise write just for conversion.
+
+```tsx
+import dayjs from 'dayjs'
+
+type FormState = {
+  // stored as "YYYY-MM"
+  startMonth: string
+}
+
+const ymToDayjs = (ym: string) => (ym ? dayjs(ym, 'YYYY-MM') : null)
+const dayjsToYm = (d: dayjs.Dayjs | null) => (d ? d.format('YYYY-MM') : '')
+
+<MonthYearPicker
+  {...register('startMonth', {
+    transform: { input: ymToDayjs, output: dayjsToYm },
+  })}
+/>
+```
+
+The returned `value` is typed as whatever `input` returns (here `dayjs.Dayjs | null`),
+and `onChange` stores `output(componentValue)`. Works for both raw-value components
+(pickers call `onChange(value)`) and DOM-event inputs.
+
 ## Nested Fields
 
 Use dot notation for nested objects:
