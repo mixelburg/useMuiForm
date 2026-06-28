@@ -25,19 +25,19 @@
     "dist"
   ],
   "devDependencies": {
-    "@rsbuild/core": "^1.5.13",
-    "@rsbuild/plugin-react": "^1.4.1",
-    "@rsbuild/plugin-type-check": "^1.2.4",
-    "@types/lodash": "^4.17.20",
-    "@types/node": "^24.6.1",
+    "@rsbuild/core": "^2.1.1",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@rsbuild/plugin-type-check": "^1.5.0",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^26.0.1",
     "tslib": "^2.8.1",
-    "typescript": "^5.9.3",
-    "react": "^19.2.0",
-    "@types/react": "^19.2.0"
+    "typescript": "^6.0.3",
+    "react": "^19.2.7",
+    "@types/react": "^19.2.17"
   },
   "dependencies": {
     "deepmerge": "^4.3.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.18.1"
   },
   "peerDependencies": {
     "react-hook-form": "^7.66.0",
