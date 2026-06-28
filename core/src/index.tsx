@@ -30,8 +30,13 @@ type RegisterMuiReturnValue<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>,
 > = BaseRegisterMuiReturn<TName> & {
-  /** Controlled value for MUI text-like inputs */
-  value: PathValue<TFieldValues, TName> | (PathValue<TFieldValues, TName> extends string ? "" : never);
+  /**
+   * Controlled value for MUI text-like inputs. Includes `""` because `register`
+   * falls back to `""` when the field is empty (`undefined`) so MUI inputs stay
+   * controlled. For a string field this collapses to `string`; for e.g. a number
+   * field it is `number | ""`, which is what an empty MUI input actually renders.
+   */
+  value: PathValue<TFieldValues, TName> | "";
 };
 
 type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
@@ -121,7 +126,8 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
       } as RegisterMuiReturn<TFieldValues, Name>;
     }
 
-    const finalValue = currentValue !== undefined ? currentValue : ("" as unknown as PathValue<TFieldValues, Name>);
+    // Fall back to "" when empty so MUI inputs stay controlled (see RegisterMuiReturnValue.value).
+    const finalValue = currentValue !== undefined ? currentValue : "";
 
     return {
       ...baseReturn,

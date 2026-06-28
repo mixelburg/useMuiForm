@@ -33,7 +33,9 @@ type RegisterMuiReturnValue<TFieldValues, TName> = {
   helperText: string
   inputRef: (instance: any) => void
 
-  value?: PathValue<TFieldValues, TName>
+  // "" is included because register falls back to "" when the field is empty,
+  // so MUI inputs stay controlled. A string field collapses to `string`.
+  value: PathValue<TFieldValues, TName> | ""
 
   // Never present for non-boolean fields
   checked?: never
