@@ -15,8 +15,10 @@ type BaseRegisterMuiReturn<TName extends Path<any>> = {
   name: TName;
   onChange: (event: unknown) => void;
   onBlur: (event: any) => void;
-  error: boolean;
-  helperText: string;
+  /** Only present (and `true`) when the field has an error, so a consumer's own `error` prop survives the spread. */
+  error?: boolean;
+  /** Only present when there's an error message, so a consumer's own `helperText` (e.g. a static hint) survives the spread. */
+  helperText?: string;
   inputRef: (instance: any) => void;
 };
 
@@ -132,9 +134,11 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
       name,
       onChange: wrappedOnChange,
       onBlur: wrappedOnBlur,
-      error: !!err,
-      helperText: (err?.message as string) || "",
       inputRef: field.ref,
+      // Only include error/helperText when there's an error, so a consumer's own
+      // error/helperText props (e.g. a static hint) aren't clobbered by false/"".
+      ...(err && { error: true }),
+      ...(err?.message && { helperText: err.message as string }),
     };
 
     if (isCheckbox) {
