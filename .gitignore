@@ -56,3 +56,5 @@ secrets/*.dec.env
 docs-app/.source
 
 bun.lock
+# Serena MCP local config/cache
+.serena/
