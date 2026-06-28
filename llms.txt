@@ -35,10 +35,15 @@ The enhanced register function. Returns an object you can spread onto MUI compon
 - `onChange` — change handler (supports both DOM events and direct values like Autocomplete)
 - `onBlur` — blur handler
 - `inputRef` — ref callback for the input element
-- `error: boolean` — whether the field has a validation error
-- `helperText: string` — the validation error message (empty string if none)
-- `value` — current field value (for text-like inputs)
-- `checked: boolean` — current checked state (auto-detected when the field value is boolean, for Checkbox/Switch)
+- `error?: boolean` / `helperText?: string` — present only on validation error (so your own static `helperText` survives the spread)
+- `value` — current field value (for text-like inputs); `value | ""` so MUI inputs stay controlled
+- `checked: boolean` — current checked state for Checkbox/Switch (pass `{ type: "checkbox" }`; also auto-detected when the field value is boolean)
+
+Options also accept `transform: { input, output }` to convert between the stored value and the component's value (e.g. `"YYYY-MM"` string ↔ a dayjs object).
+
+### useMuiField(name, options?) / MuiField
+
+Isolated, field-level alternatives to `register`, backed by `useController`. `register` derives its value via `watch`, which re-renders the host on every change; `useMuiField` (a hook) and `<MuiField name render={(props) => ...} />` (a component) subscribe in isolation so each field re-renders alone. Same prop shape and options as `register` (including `type: "checkbox"` and `transform`). Use for large forms; must be inside a `MuiFormProvider`.
 
 ## Quick Example
 

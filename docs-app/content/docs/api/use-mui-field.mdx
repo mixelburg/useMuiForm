@@ -1,0 +1,83 @@
+---
+title: useMuiField & MuiField
+description: Isolated, field-level subscription primitives that avoid whole-form re-renders
+---
+
+# useMuiField & MuiField
+
+`register` is convenient, but it derives its value from `watch`, which subscribes the **host component** — so a form with N registered fields re-renders all N on every keystroke. For large forms that cost adds up.
+
+`useMuiField` and `<MuiField>` solve this: they subscribe through react-hook-form's `useController`, so each field re-renders **in isolation**. They return the exact same prop shape as `register` (including `type: "checkbox"` and `transform`), so spreading them onto MUI inputs works identically.
+
+Both must be used inside a `MuiFormProvider`.
+
+## When to use which
+
+- **`register`** — small/simple forms where re-rendering the whole form on each change is fine.
+- **`useMuiField` / `<MuiField>`** — larger forms where per-keystroke re-renders matter, or anywhere you'd otherwise reach for `<Controller>` just to isolate a field.
+
+## Import
+
+```tsx
+import { useMuiField, MuiField } from 'usemuiform'
+```
+
+## useMuiField
+
+```tsx
+function useMuiField<TFieldValues, Name>(
+  name: Name,
+  options?: MuiRegisterOptions<TFieldValues, Name>
+): RegisterMuiReturn<TFieldValues, Name>
+```
+
+Call it inside its **own component** (the component boundary is what gives you isolation — calling it in the host component would re-subscribe the host):
+
+```tsx
+import { useMuiField } from 'usemuiform'
+import { TextField } from '@mui/material'
+
+function EmailField() {
+  const props = useMuiField<FormState, 'email'>('email', { required: 'Required' })
+  return <TextField label="Email" {...props} />
+}
+```
+
+## MuiField
+
+A thin component that calls `useMuiField` for you and hands the props to a `render` prop (or function `children`). Because it is its own component, only it re-renders when its field changes — the drop-in `<Controller>` replacement.
+
+```tsx
+import { MuiField } from 'usemuiform'
+import { TextField, Checkbox, FormControlLabel } from '@mui/material'
+
+<MuiField<FormState, 'email'>
+  name="email"
+  required="Required"
+  render={(props) => <TextField label="Email" {...props} />}
+/>
+
+// checkbox
+<MuiField<FormState, 'acceptTerms'>
+  name="acceptTerms"
+  type="checkbox"
+  render={(props) => (
+    <FormControlLabel control={<Checkbox {...props} />} label="Accept" />
+  )}
+/>
+
+// transform (stored "YYYY-MM" <-> dayjs in the picker)
+<MuiField<FormState, 'startMonth', dayjs.Dayjs | null>
+  name="startMonth"
+  transform={{ input: ymToDayjs, output: dayjsToYm }}
+  render={(props) => <MonthYearPicker {...props} />}
+/>
+```
+
+The `render` callback receives the same props `useMuiField(name, options)` returns, typed per the options (boolean `checked` shape for `type: "checkbox"`, the component value type for `transform`, otherwise the value shape).
+
+## See Also
+
+- [useMuiForm](/docs/api/use-mui-form) — main hook (and the `register` scaling note)
+- [MuiFormProvider](/docs/api/mui-form-provider) — required context provider
+- [Type Definitions](/docs/api/types)

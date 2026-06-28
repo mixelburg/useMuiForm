@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  type FieldError,
   type FieldValues,
   type Path,
   type PathValue,
@@ -7,6 +8,7 @@ import {
   FormProvider as RHFFormProvider,
   type UseFormProps,
   UseFormReturn,
+  useController,
   useForm,
   useFormContext as useRHFFormContext,
 } from "react-hook-form";
@@ -22,12 +24,12 @@ type BaseRegisterMuiReturn<TName extends Path<any>> = {
   inputRef: (instance: any) => void;
 };
 
-type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
+export type RegisterMuiReturnBoolean<TName extends Path<any>> = BaseRegisterMuiReturn<TName> & {
   /** Controlled checked state for MUI Checkbox/Switch */
   checked: boolean;
 };
 
-type RegisterMuiReturnValue<
+export type RegisterMuiReturnValue<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>,
 > = BaseRegisterMuiReturn<TName> & {
@@ -40,7 +42,7 @@ type RegisterMuiReturnValue<
   value: PathValue<TFieldValues, TName> | "";
 };
 
-type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
+export type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = PathValue<
   TFieldValues,
   TName
 > extends boolean
@@ -48,19 +50,19 @@ type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFie
   : RegisterMuiReturnValue<TFieldValues, TName>;
 
 /** Converts between the stored model value and the component's value. */
-type MuiTransform<TStored, TComponent> = {
+export type MuiTransform<TStored, TComponent> = {
   /** Map the stored value -> the component's value (on read). */
   input: (value: TStored) => TComponent;
   /** Map the component's value -> the stored value (on change). */
   output: (value: TComponent) => TStored;
 };
 
-type RegisterMuiReturnTransformed<TName extends Path<any>, TComponent> = BaseRegisterMuiReturn<TName> & {
+export type RegisterMuiReturnTransformed<TName extends Path<any>, TComponent> = BaseRegisterMuiReturn<TName> & {
   /** Controlled value, mapped from the stored value through `transform.input`. */
   value: TComponent;
 };
 
-type MuiRegisterOptions<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = RegisterOptions<
+export type MuiRegisterOptions<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = RegisterOptions<
   TFieldValues,
   TName
 > & {
@@ -101,6 +103,81 @@ const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => 
   return (v as React.ChangeEvent<HTMLInputElement>)?.target?.value !== undefined;
 };
 
+type AnyTransform = MuiTransform<unknown, unknown>;
+
+/**
+ * Build the MUI `onChange` from backend commit primitives, shared by `register` (RHF
+ * uncontrolled) and `useMuiField` (`useController`).
+ * - `passEvent`: forward a (possibly synthetic) event to RHF, which extracts the value.
+ * - `setRaw`: store an already-computed raw value.
+ */
+const makeOnChange = (
+  name: string,
+  isCheckbox: boolean,
+  transform: AnyTransform | undefined,
+  passEvent: (event: any) => unknown,
+  setRaw: (value: unknown) => void,
+) => {
+  return (event: unknown) => {
+    if (isChangeEvent(event)) {
+      if (isCheckbox) {
+        passEvent({ target: { name, checked: event.target.checked, type: "checkbox" } });
+      } else if (transform) {
+        setRaw(transform.output(event.target.value));
+      } else {
+        passEvent(event);
+      }
+    } else {
+      // Raw (non-event) value, e.g. from a date/currency picker's onChange(value).
+      setRaw(transform ? transform.output(event) : event);
+    }
+  };
+};
+
+const makeOnBlur = (name: string, isCheckbox: boolean, rhfBlur: (event: any) => unknown) => {
+  return (event: React.FocusEvent<HTMLInputElement>) => {
+    if (event?.target?.value !== undefined) {
+      rhfBlur(
+        isCheckbox
+          ? { target: { name, checked: event.target.checked, type: "checkbox" } }
+          : { target: { name, value: event.target.value } },
+      );
+    }
+  };
+};
+
+/** Assemble the MUI props from already-resolved pieces. Shared by `register` and `useMuiField`. */
+const buildFieldProps = (
+  name: string,
+  currentValue: unknown,
+  error: FieldError | undefined,
+  ref: (instance: unknown) => void,
+  isCheckbox: boolean,
+  transform: AnyTransform | undefined,
+  onChange: (event: unknown) => void,
+  onBlur: (event: React.FocusEvent<HTMLInputElement>) => void,
+) => {
+  const base = {
+    name,
+    onChange,
+    onBlur,
+    inputRef: ref,
+    // Only include error/helperText when there's an error, so a consumer's own
+    // error/helperText props (e.g. a static hint) aren't clobbered by false/"".
+    ...(error && { error: true }),
+    ...(error?.message && { helperText: error.message as string }),
+  };
+  if (isCheckbox) {
+    return { ...base, checked: (currentValue as boolean | undefined) ?? false };
+  }
+  if (transform) {
+    // Let the consumer's input() decide how to represent empty/undefined (e.g. null for a picker).
+    return { ...base, value: transform.input(currentValue) };
+  }
+  // Fall back to "" when empty so MUI inputs stay controlled (see RegisterMuiReturnValue.value).
+  return { ...base, value: currentValue !== undefined ? currentValue : "" };
+};
+
 function createMuiFormMethods<TFieldValues extends FieldValues>(
   methods: UseFormReturn<TFieldValues>,
 ): UseMuiFormReturn<TFieldValues> {
@@ -139,86 +216,21 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(
     const currentValue = watch(name);
     // Explicit type: "checkbox" wins; otherwise fall back to inferring from a boolean value.
     const isCheckbox = type === "checkbox" || typeof currentValue === "boolean";
+    const t = transform as AnyTransform | undefined;
 
-    const wrappedOnChange = (event: unknown) => {
-      if (isChangeEvent(event)) {
-        if (isCheckbox) {
-          field.onChange({
-            target: {
-              name,
-              checked: event.target.checked as PathValue<TFieldValues, Name>,
-              type: "checkbox",
-            },
-          });
-        } else if (transform) {
-          setValue(name, transform.output(event.target.value) as PathValue<TFieldValues, Name>);
-          trigger(name);
-        } else {
-          field.onChange(event);
-        }
-      } else {
-        // Raw (non-event) value, e.g. from a date/currency picker's onChange(value).
-        const stored = transform ? transform.output(event) : event;
-        setValue(name, stored as PathValue<TFieldValues, Name>);
-        trigger(name);
-      }
-    };
+    // register commits native/checkbox events through RHF (preserving valueAs*); transform/raw
+    // values go via setValue + trigger, as before.
+    const onChange = makeOnChange(name, isCheckbox, t, field.onChange, (value) => {
+      setValue(name, value as PathValue<TFieldValues, Name>);
+      trigger(name);
+    });
+    const onBlur = makeOnBlur(name, isCheckbox, field.onBlur);
 
-    const wrappedOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      if (event?.target?.value !== undefined) {
-        if (isCheckbox) {
-          field.onBlur({
-            target: {
-              name,
-              checked: event.target.checked as PathValue<TFieldValues, Name>,
-              type: "checkbox",
-            },
-          });
-        } else {
-          field.onBlur({
-            target: {
-              name,
-              value: event.target.value as PathValue<TFieldValues, Name>,
-            },
-          });
-        }
-      }
-    };
-
-    const baseReturn: BaseRegisterMuiReturn<Name> = {
-      name,
-      onChange: wrappedOnChange,
-      onBlur: wrappedOnBlur,
-      inputRef: field.ref,
-      // Only include error/helperText when there's an error, so a consumer's own
-      // error/helperText props (e.g. a static hint) aren't clobbered by false/"".
-      ...(err && { error: true }),
-      ...(err?.message && { helperText: err.message as string }),
-    };
-
-    if (isCheckbox) {
-      return {
-        ...baseReturn,
-        checked: (currentValue as boolean | undefined) ?? false,
-      } as RegisterMuiReturnBoolean<Name>;
-    }
-
-    if (transform) {
-      // Map the stored value to the component's value; let the consumer's input() decide how to
-      // represent an empty/undefined value (e.g. null for a date picker) rather than forcing "".
-      return {
-        ...baseReturn,
-        value: transform.input(currentValue as PathValue<TFieldValues, Name>),
-      } as RegisterMuiReturnTransformed<Name, unknown>;
-    }
-
-    // Fall back to "" when empty so MUI inputs stay controlled (see RegisterMuiReturnValue.value).
-    const finalValue = currentValue !== undefined ? currentValue : "";
-
-    return {
-      ...baseReturn,
-      value: finalValue,
-    } as RegisterMuiReturnValue<TFieldValues, Name>;
+    const props = buildFieldProps(name, currentValue, err, field.ref, isCheckbox, t, onChange, onBlur);
+    return props as
+      | RegisterMuiReturnBoolean<Name>
+      | RegisterMuiReturnValue<TFieldValues, Name>
+      | RegisterMuiReturnTransformed<Name, unknown>;
   }
 
   return { ...methods, register, registerHtml };
@@ -234,6 +246,97 @@ export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(
 export function useMuiFormContext<TFieldValues extends FieldValues = FieldValues>(): UseMuiFormReturn<TFieldValues> {
   const methods = useRHFFormContext<TFieldValues>();
   return createMuiFormMethods(methods);
+}
+
+/**
+ * Field-level primitive backed by `useController`. Unlike `register` (which derives its value from
+ * `watch` and re-renders the host on every change), `useMuiField` subscribes in isolation, so a field
+ * rendered inside its own component re-renders alone. Must be used within a `MuiFormProvider`.
+ * Returns the same prop shape as `register`, including `type: "checkbox"` and `transform` support.
+ */
+export function useMuiField<TFieldValues extends FieldValues, Name extends Path<TFieldValues>>(
+  name: Name,
+  options: MuiRegisterOptions<TFieldValues, Name> & { type: "checkbox" },
+): RegisterMuiReturnBoolean<Name>;
+export function useMuiField<TFieldValues extends FieldValues, Name extends Path<TFieldValues>, TComponent>(
+  name: Name,
+  options: MuiRegisterOptions<TFieldValues, Name> & {
+    transform: MuiTransform<PathValue<TFieldValues, Name>, TComponent>;
+  },
+): RegisterMuiReturnTransformed<Name, TComponent>;
+export function useMuiField<TFieldValues extends FieldValues, Name extends Path<TFieldValues>>(
+  name: Name,
+  options?: MuiRegisterOptions<TFieldValues, Name>,
+): RegisterMuiReturn<TFieldValues, Name>;
+export function useMuiField<TFieldValues extends FieldValues, Name extends Path<TFieldValues>>(
+  name: Name,
+  options?: MuiRegisterOptions<TFieldValues, Name> & {
+    transform?: MuiTransform<PathValue<TFieldValues, Name>, unknown>;
+  },
+):
+  | RegisterMuiReturnBoolean<Name>
+  | RegisterMuiReturnValue<TFieldValues, Name>
+  | RegisterMuiReturnTransformed<Name, unknown> {
+  const { type, transform, ...rules } = options ?? {};
+  const { control } = useRHFFormContext<TFieldValues>();
+  const { field, fieldState } = useController<TFieldValues, Name>({
+    name,
+    control,
+    rules: rules as RegisterOptions<TFieldValues, Name>,
+  });
+
+  const currentValue = field.value;
+  const isCheckbox = type === "checkbox" || typeof currentValue === "boolean";
+  const t = transform as AnyTransform | undefined;
+
+  // useController's onChange handles both events and raw values, so it serves both commit paths.
+  const onChange = makeOnChange(name, isCheckbox, t, field.onChange, field.onChange);
+  const onBlur = makeOnBlur(name, isCheckbox, field.onBlur);
+
+  const props = buildFieldProps(name, currentValue, fieldState.error, field.ref, isCheckbox, t, onChange, onBlur);
+  return props as
+    | RegisterMuiReturnBoolean<Name>
+    | RegisterMuiReturnValue<TFieldValues, Name>
+    | RegisterMuiReturnTransformed<Name, unknown>;
+}
+
+type MuiFieldRenderProps<TFieldValues extends FieldValues, Name extends Path<TFieldValues>, O> = O extends {
+  type: "checkbox";
+}
+  ? RegisterMuiReturnBoolean<Name>
+  : O extends { transform: MuiTransform<PathValue<TFieldValues, Name>, infer TComponent> }
+    ? RegisterMuiReturnTransformed<Name, TComponent>
+    : RegisterMuiReturn<TFieldValues, Name>;
+
+export type MuiFieldProps<
+  TFieldValues extends FieldValues,
+  Name extends Path<TFieldValues>,
+  O extends MuiRegisterOptions<TFieldValues, Name> & {
+    transform?: MuiTransform<PathValue<TFieldValues, Name>, unknown>;
+  } = MuiRegisterOptions<TFieldValues, Name>,
+> = O & {
+  name: Name;
+  /** Receives the field props (the same shape `useMuiField(name, options)` returns). */
+  render?: (props: MuiFieldRenderProps<TFieldValues, Name, O>) => React.ReactNode;
+  children?: (props: MuiFieldRenderProps<TFieldValues, Name, O>) => React.ReactNode;
+};
+
+/**
+ * Isolated field component: a thin wrapper over `useMuiField` that passes the field props to a
+ * `render` prop (or function `children`). Because it is its own component, only it re-renders when
+ * its field changes — the drop-in `<Controller>` replacement with the MUI mapping built in.
+ */
+export function MuiField<
+  TFieldValues extends FieldValues,
+  Name extends Path<TFieldValues>,
+  O extends MuiRegisterOptions<TFieldValues, Name> & {
+    transform?: MuiTransform<PathValue<TFieldValues, Name>, unknown>;
+  } = MuiRegisterOptions<TFieldValues, Name>,
+>(props: MuiFieldProps<TFieldValues, Name, O>) {
+  const { name, render, children, ...options } = props;
+  const fieldProps = useMuiField<TFieldValues, Name>(name, options as MuiRegisterOptions<TFieldValues, Name>);
+  const renderFn = render ?? children;
+  return <>{renderFn ? renderFn(fieldProps as MuiFieldRenderProps<TFieldValues, Name, O>) : null}</>;
 }
 
 export type MuiFormProviderProps<TFieldValues extends FieldValues = FieldValues> = {
