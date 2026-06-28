@@ -113,7 +113,7 @@ Or simpler without helper text:
 ```tsx
 <FormControlLabel
   label="Accept Terms"
-  control={<Checkbox {...register('acceptTerms')} />}
+  control={<Checkbox {...register('acceptTerms', { type: 'checkbox' })} />}
 />
 ```
 

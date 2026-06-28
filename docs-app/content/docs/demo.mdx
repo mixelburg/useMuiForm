@@ -64,11 +64,16 @@ No need to manually check `formState.errors` - the `error` and `helperText` prop
 
 ### 4. Checkbox Support
 
-Boolean fields automatically get `checked` instead of `value`:
+Mark the field as a checkbox so `register` returns `checked` instead of `value`:
 
 ```tsx
-<Checkbox {...register('acceptTerms')} />
+<Checkbox {...register('acceptTerms', { type: 'checkbox' })} />
 ```
+
+Boolean fields are also auto-detected, but only when the boolean is seeded in
+`defaultValues` (e.g. `{ acceptTerms: false }`). If it isn't, the value is
+`undefined` and the field is mistaken for a text input — so prefer the explicit
+`{ type: 'checkbox' }`.
 
 ## Next Steps
 
