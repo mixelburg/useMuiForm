@@ -47,6 +47,19 @@ type RegisterMuiReturn<TFieldValues extends FieldValues, TName extends Path<TFie
   ? RegisterMuiReturnBoolean<TName>
   : RegisterMuiReturnValue<TFieldValues, TName>;
 
+/** Converts between the stored model value and the component's value. */
+type MuiTransform<TStored, TComponent> = {
+  /** Map the stored value -> the component's value (on read). */
+  input: (value: TStored) => TComponent;
+  /** Map the component's value -> the stored value (on change). */
+  output: (value: TComponent) => TStored;
+};
+
+type RegisterMuiReturnTransformed<TName extends Path<any>, TComponent> = BaseRegisterMuiReturn<TName> & {
+  /** Controlled value, mapped from the stored value through `transform.input`. */
+  value: TComponent;
+};
+
 type MuiRegisterOptions<TFieldValues extends FieldValues, TName extends Path<TFieldValues>> = RegisterOptions<
   TFieldValues,
   TName
@@ -60,27 +73,64 @@ type MuiRegisterOptions<TFieldValues extends FieldValues, TName extends Path<TFi
   type?: "checkbox";
 };
 
+/** The MUI-enhanced `register` function (overloaded for checkbox / transform / value fields). */
+export type MuiRegister<TFieldValues extends FieldValues> = {
+  <Name extends Path<TFieldValues>>(
+    name: Name,
+    regOptions: MuiRegisterOptions<TFieldValues, Name> & { type: "checkbox" },
+  ): RegisterMuiReturnBoolean<Name>;
+  <Name extends Path<TFieldValues>, TComponent>(
+    name: Name,
+    regOptions: MuiRegisterOptions<TFieldValues, Name> & {
+      transform: MuiTransform<PathValue<TFieldValues, Name>, TComponent>;
+    },
+  ): RegisterMuiReturnTransformed<Name, TComponent>;
+  <Name extends Path<TFieldValues>>(
+    name: Name,
+    regOptions?: MuiRegisterOptions<TFieldValues, Name>,
+  ): RegisterMuiReturn<TFieldValues, Name>;
+};
+
+/** Return type of `useMuiForm` / `useMuiFormContext`: react-hook-form's methods plus the MUI register. */
+export type UseMuiFormReturn<TFieldValues extends FieldValues> = Omit<UseFormReturn<TFieldValues>, "register"> & {
+  register: MuiRegister<TFieldValues>;
+  registerHtml: UseFormReturn<TFieldValues>["register"];
+};
+
 const isChangeEvent = (v: unknown): v is React.ChangeEvent<HTMLInputElement> => {
   return (v as React.ChangeEvent<HTMLInputElement>)?.target?.value !== undefined;
 };
 
-function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseFormReturn<TFieldValues>) {
+function createMuiFormMethods<TFieldValues extends FieldValues>(
+  methods: UseFormReturn<TFieldValues>,
+): UseMuiFormReturn<TFieldValues> {
   const { register: registerHtml, formState, getFieldState, setValue, trigger, watch } = methods;
 
   function register<Name extends Path<TFieldValues>>(
     name: Name,
     regOptions: MuiRegisterOptions<TFieldValues, Name> & { type: "checkbox" },
   ): RegisterMuiReturnBoolean<Name>;
+  function register<Name extends Path<TFieldValues>, TComponent>(
+    name: Name,
+    regOptions: MuiRegisterOptions<TFieldValues, Name> & {
+      transform: MuiTransform<PathValue<TFieldValues, Name>, TComponent>;
+    },
+  ): RegisterMuiReturnTransformed<Name, TComponent>;
   function register<Name extends Path<TFieldValues>>(
     name: Name,
     regOptions?: MuiRegisterOptions<TFieldValues, Name>,
   ): RegisterMuiReturn<TFieldValues, Name>;
   function register<Name extends Path<TFieldValues>>(
     name: Name,
-    regOptions?: MuiRegisterOptions<TFieldValues, Name>,
-  ): RegisterMuiReturnBoolean<Name> | RegisterMuiReturnValue<TFieldValues, Name> {
-    // `type` is our own option; strip it before handing the rest to react-hook-form.
-    const { type, ...rhfOptions } = regOptions ?? {};
+    regOptions?: MuiRegisterOptions<TFieldValues, Name> & {
+      transform?: MuiTransform<PathValue<TFieldValues, Name>, unknown>;
+    },
+  ):
+    | RegisterMuiReturnBoolean<Name>
+    | RegisterMuiReturnValue<TFieldValues, Name>
+    | RegisterMuiReturnTransformed<Name, unknown> {
+    // `type` and `transform` are our own options; strip them before handing the rest to react-hook-form.
+    const { type, transform, ...rhfOptions } = regOptions ?? {};
     const field = registerHtml(name, rhfOptions as RegisterOptions<TFieldValues, Name>);
     // Pass formState so getFieldState subscribes to errors and re-renders on error changes.
     const err = getFieldState(name, formState).error;
@@ -100,11 +150,16 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
               type: "checkbox",
             },
           });
+        } else if (transform) {
+          setValue(name, transform.output(event.target.value) as PathValue<TFieldValues, Name>);
+          trigger(name);
         } else {
           field.onChange(event);
         }
       } else {
-        setValue(name, event as PathValue<TFieldValues, Name>);
+        // Raw (non-event) value, e.g. from a date/currency picker's onChange(value).
+        const stored = transform ? transform.output(event) : event;
+        setValue(name, stored as PathValue<TFieldValues, Name>);
         trigger(name);
       }
     };
@@ -148,6 +203,15 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
       } as RegisterMuiReturnBoolean<Name>;
     }
 
+    if (transform) {
+      // Map the stored value to the component's value; let the consumer's input() decide how to
+      // represent an empty/undefined value (e.g. null for a date picker) rather than forcing "".
+      return {
+        ...baseReturn,
+        value: transform.input(currentValue as PathValue<TFieldValues, Name>),
+      } as RegisterMuiReturnTransformed<Name, unknown>;
+    }
+
     // Fall back to "" when empty so MUI inputs stay controlled (see RegisterMuiReturnValue.value).
     const finalValue = currentValue !== undefined ? currentValue : "";
 
@@ -160,12 +224,14 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
   return { ...methods, register, registerHtml };
 }
 
-export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(options?: UseFormProps<TFieldValues>) {
+export function useMuiForm<TFieldValues extends FieldValues = FieldValues>(
+  options?: UseFormProps<TFieldValues>,
+): UseMuiFormReturn<TFieldValues> {
   const methods = useForm<TFieldValues>(options);
   return createMuiFormMethods(methods);
 }
 
-export function useMuiFormContext<TFieldValues extends FieldValues = FieldValues>() {
+export function useMuiFormContext<TFieldValues extends FieldValues = FieldValues>(): UseMuiFormReturn<TFieldValues> {
   const methods = useRHFFormContext<TFieldValues>();
   return createMuiFormMethods(methods);
 }
@@ -173,8 +239,8 @@ export function useMuiFormContext<TFieldValues extends FieldValues = FieldValues
 export type MuiFormProviderProps<TFieldValues extends FieldValues = FieldValues> = {
   children: React.ReactNode;
 } & Omit<UseFormReturn<TFieldValues>, "register"> & {
-    register: ReturnType<typeof useMuiForm<TFieldValues>>["register"];
-    registerHtml: ReturnType<typeof useMuiForm<TFieldValues>>["registerHtml"];
+    register: MuiRegister<TFieldValues>;
+    registerHtml: UseMuiFormReturn<TFieldValues>["registerHtml"];
   };
 
 export function MuiFormProvider<TFieldValues extends FieldValues = FieldValues>(
