@@ -81,6 +81,8 @@ register('address.city')    // Deeply nested field
 
 Under the hood, `register` uses `watch(name)` from react-hook-form to derive the current value for the field, so the `value` / `checked` props stay in sync with the form state in real time (including `reset`, `setValue`, etc.).
 
+> **Scaling note:** because `watch` subscribes the **host component**, a form that calls `register` for N fields re-renders all N on every change to any field. For small forms this is fine. For large forms, use [`useMuiField` / `<MuiField>`](/docs/api/use-mui-field), which subscribe in isolation via `useController` so each field re-renders alone — the same reason you'd otherwise reach for `<Controller>`.
+
 The key differences from react-hook-form's `register`:
 - Returns `error` / `helperText` on validation errors instead of requiring you to access `formState.errors`. They're omitted when there's no error, so a static `helperText` hint you set yourself isn't clobbered by the spread (put `{...register('x')}` before your own `helperText` if you want errors to override it).
 - Always provides **controlled** `value`/`checked` props suitable for MUI components
