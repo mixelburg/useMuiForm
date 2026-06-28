@@ -29,8 +29,9 @@ type RegisterMuiReturnValue<TFieldValues, TName> = {
   name: TName
   onChange?: (event: any) => void
   onBlur: (event: any) => void
-  error: boolean
-  helperText: string
+  // Present only on error, so your own error/helperText props survive the spread.
+  error?: boolean
+  helperText?: string
   inputRef: (instance: any) => void
 
   // "" is included because register falls back to "" when the field is empty,
@@ -51,8 +52,9 @@ type RegisterMuiReturnBoolean<TName> = {
   name: TName
   onChange?: (event: any) => void
   onBlur: (event: any) => void
-  error: boolean
-  helperText: string
+  // Present only on error, so your own error/helperText props survive the spread.
+  error?: boolean
+  helperText?: string
   inputRef: (instance: any) => void
 
   checked?: boolean

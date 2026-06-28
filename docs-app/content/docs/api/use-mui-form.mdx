@@ -67,8 +67,8 @@ register('address.city')    // Deeply nested field
   name: string           // Field name
   onChange: function     // Change handler (supports both events and direct values)
   onBlur: function       // Blur handler
-  error: boolean         // Whether field has validation error
-  helperText: string     // Error message (empty if no error)
+  error?: boolean        // Present (and true) only when the field has an error
+  helperText?: string    // Present only when there's an error message
   inputRef: RefObject    // React ref for the input
 
   // For non-boolean fields:
@@ -82,7 +82,7 @@ register('address.city')    // Deeply nested field
 Under the hood, `register` uses `watch(name)` from react-hook-form to derive the current value for the field, so the `value` / `checked` props stay in sync with the form state in real time (including `reset`, `setValue`, etc.).
 
 The key differences from react-hook-form's `register`:
-- Returns `error` (boolean) and `helperText` (string) instead of requiring you to access `formState.errors`
+- Returns `error` / `helperText` on validation errors instead of requiring you to access `formState.errors`. They're omitted when there's no error, so a static `helperText` hint you set yourself isn't clobbered by the spread (put `{...register('x')}` before your own `helperText` if you want errors to override it).
 - Always provides **controlled** `value`/`checked` props suitable for MUI components
 - The `onChange` handler works with both MUI events and direct values (e.g. `onChange(value)` from pickers)
 
