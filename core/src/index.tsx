@@ -14,8 +14,8 @@ import {
 
 type BaseRegisterMuiReturn<TName extends Path<any>> = {
   name: TName;
-  onChange: (event: unknown) => Promise<boolean>;
-  onBlur: (event: any) => Promise<boolean>;
+  onChange: (event: unknown) => void;
+  onBlur: (event: any) => void;
   error: boolean;
   helperText: string;
   inputRef: (instance: any) => void;
@@ -65,7 +65,7 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
     const currentValue = watch(name);
     const isCheckbox = typeof currentValue === "boolean";
 
-    const wrappedOnChange = async (event: unknown) => {
+    const wrappedOnChange = (event: unknown) => {
       if (isChangeEvent(event)) {
         if (isCheckbox) {
           field.onChange({
@@ -82,10 +82,9 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
         setValue(name, event as PathValue<TFieldValues, Name>);
         trigger(name);
       }
-      return true;
     };
 
-    const wrappedOnBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
+    const wrappedOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
       if (event?.target?.value !== undefined) {
         if (isCheckbox) {
           field.onBlur({
@@ -104,7 +103,6 @@ function createMuiFormMethods<TFieldValues extends FieldValues>(methods: UseForm
           });
         }
       }
-      return true;
     };
 
     const baseReturn: BaseRegisterMuiReturn<Name> = {
